@@ -1,6 +1,6 @@
 {
   "name": "mailflow-desktop",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "MailFlow - Email Sender Desktop Application",
   "type": "module",
   "main": "electron/main.cjs",
@@ -9,6 +9,9 @@
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
     "electron:dev": "unset ELECTRON_RUN_AS_NODE && electron .",
+    "build:assets": "node scripts/generate-installer-assets.cjs",
+    "prebuild:installer": "npm run build:assets",
+    "build:installer": "electron-builder --win nsis",
     "electron:build": "electron-builder",
     "electron:pack": "electron-builder --dir",
     "electron:publish": "electron-builder --publish always",
@@ -59,7 +62,8 @@
       "services/**/*",
       "public/**/*",
       "server.mjs",
-      "package.json"
+      "package.json",
+      "!**/*.{md,DS_Store}"
     ],
     "extraResources": [
       {
@@ -75,10 +79,23 @@
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": false,
       "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "menuCategory": "MailFlow",
+      "shortcutName": "MailFlow 2.0",
       "installerIcon": "public/img/logo.ico",
       "uninstallerIcon": "public/img/logo.ico",
-      "shortcutName": "MailFlow 2.0"
+      "installerHeader": "build/installerHeader.bmp",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/uninstallerSidebar.bmp",
+      "license": "build/license.txt",
+      "artifactName": "MailFlow-Setup-${version}.${ext}",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "differentialPackage": true
     },
     "publish": [
       {

@@ -1,0 +1,403 @@
+MAILFLOW 2.0 SOFTWARE LICENSE AGREEMENT AND USER RESPONSIBILITY DISCLAIMER
+
+Last updated: 2026
+
+
+IMPORTANT — READ CAREFULLY BEFORE INSTALLING.
+
+This Software License Agreement and User Responsibility Disclaimer (the
+"Agreement") is a binding legal contract between you (either an individual
+or a single legal entity, "You" or "User") and MailFlow ("the Publisher",
+"We", "Us") for the MailFlow 2.0 software product, including any associated
+media, printed materials, documentation, online services, and software
+updates (collectively, "the Software").
+
+BY CLICKING "I AGREE", INSTALLING, COPYING, DOWNLOADING, OR OTHERWISE USING
+THE SOFTWARE, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND AGREE TO
+BE BOUND BY THE TERMS OF THIS AGREEMENT. IF YOU DO NOT AGREE TO THESE TERMS,
+DO NOT INSTALL OR USE THE SOFTWARE AND PROMPTLY REMOVE IT FROM YOUR DEVICE.
+
+================================================================================
+1. ACKNOWLEDGEMENT OF LAWFUL USE — REQUIRED USER REPRESENTATION
+================================================================================
+
+By installing this Software, You expressly represent, warrant, and certify
+under penalty of perjury that:
+
+(a) You will use the Software EXCLUSIVELY for legitimate, lawful, and
+    ethical purposes;
+
+(b) You will NEVER use the Software for any illicit, illegal, fraudulent,
+    deceptive, harassing, malicious, or otherwise unlawful purpose of any
+    kind whatsoever;
+
+(c) You possess and will continue to maintain ALL necessary legal rights,
+    permissions, and explicit consents from every recipient You send email
+    to, in accordance with the laws of the recipient's jurisdiction;
+
+(d) You are solely and personally responsible for the content, recipients,
+    timing, and conduct of every email message sent through the Software;
+
+(e) You will fully comply with all applicable laws including but not limited
+    to: the U.S. CAN-SPAM Act of 2003, the EU General Data Protection
+    Regulation (GDPR), Canada's Anti-Spam Legislation (CASL), the UK Privacy
+    and Electronic Communications Regulations (PECR), the California
+    Consumer Privacy Act (CCPA), and all other applicable federal, state,
+    provincial, local, and international laws and regulations governing
+    electronic communication, data protection, privacy, and consumer
+    protection;
+
+(f) You will honor every unsubscribe request promptly (within the legally
+    required timeframe of the recipient's jurisdiction, and in no case
+    later than 10 business days);
+
+(g) You will provide accurate, non-misleading sender identification and
+    a valid physical postal address in every commercial email message;
+
+(h) You will NOT use forged headers, false sender names, deceptive subject
+    lines, or any technique intended to mislead recipients about the
+    origin or nature of a message;
+
+(i) You will NOT scrape, harvest, purchase, rent, or otherwise acquire
+    email addresses without the explicit, informed, opt-in consent of
+    each individual on the list.
+
+================================================================================
+2. STRICTLY PROHIBITED USES
+================================================================================
+
+You shall NOT, under any circumstances, use the Software to:
+
+  • Send unsolicited bulk email (spam) of any kind to any recipient who
+    has not given prior explicit opt-in consent to receive your messages;
+  • Distribute, transmit, or facilitate the distribution of viruses,
+    worms, ransomware, spyware, trojans, keyloggers, or any other form
+    of malicious code;
+  • Conduct phishing, credential theft, identity theft, social
+    engineering, business email compromise (BEC), or any related fraud;
+  • Send messages that promote, facilitate, or are connected to:
+        - illegal goods or services
+        - controlled substances or prescription medications without
+          proper authorization
+        - firearms, weapons, or ammunition in violation of law
+        - human trafficking, sexual exploitation, or child endangerment
+        - terrorism, violent extremism, or incitement of violence
+        - pyramid schemes, Ponzi schemes, or other financial fraud
+        - investment scams, cryptocurrency rug pulls, or unregistered
+          securities offerings
+        - counterfeit goods or trademark infringement
+        - copyright piracy or distribution of pirated content;
+  • Impersonate any individual, business, government agency, brand, or
+    organization;
+  • Forge, alter, or obscure email headers, routing information, or
+    sender details;
+  • Harass, threaten, defame, libel, stalk, or intimidate any recipient;
+  • Send content that is obscene, pornographic, sexually exploitative,
+    discriminatory, hateful, or that promotes violence;
+  • Circumvent, disable, or interfere with any security feature, rate
+    limit, anti-abuse mechanism, or terms of service of any third-party
+    SMTP provider, email service, or email recipient's mail system;
+  • Reverse engineer, decompile, disassemble, modify, or create
+    derivative works of the Software, except to the extent expressly
+    permitted by applicable law;
+  • Resell, sublicense, lease, lend, or distribute the Software, your
+    license key, or any portion thereof;
+  • Use the Software in any manner that violates the rights of any
+    third party, including but not limited to intellectual property,
+    privacy, publicity, or contractual rights;
+  • Use the Software in any manner that could cause damage, disable,
+    overburden, or impair the Software, the Publisher's servers, or any
+    network connected to the Software.
+
+ANY VIOLATION OF THIS SECTION CONSTITUTES A MATERIAL BREACH OF THIS
+AGREEMENT AND WILL RESULT IN IMMEDIATE TERMINATION OF YOUR LICENSE WITHOUT
+REFUND, AND MAY EXPOSE YOU TO CIVIL AND CRIMINAL PENALTIES.
+
+================================================================================
+3. SOLE RESPONSIBILITY — INDEMNIFICATION
+================================================================================
+
+YOU ACKNOWLEDGE AND AGREE THAT YOU, THE END USER, ARE THE SOLE AND
+EXCLUSIVE PARTY RESPONSIBLE FOR HOW THE SOFTWARE IS USED AFTER
+INSTALLATION. THE PUBLISHER IS A PROVIDER OF GENERAL-PURPOSE EMAIL
+SOFTWARE TOOLS AND DOES NOT MONITOR, CONTROL, REVIEW, OR ENDORSE THE
+CONTENT OF MESSAGES SENT THROUGH THE SOFTWARE.
+
+You agree to defend, indemnify, and hold harmless the Publisher, its
+affiliates, officers, directors, employees, contractors, agents,
+licensors, suppliers, and successors from and against any and all claims,
+liabilities, damages, judgments, awards, losses, costs, expenses, and
+fees (including reasonable attorneys' fees) arising out of or relating
+to:
+
+  (a) Your use or misuse of the Software;
+  (b) Your violation of any provision of this Agreement;
+  (c) Your violation of any applicable law, regulation, or third-party
+      right (including any intellectual property right, privacy right,
+      or contractual right);
+  (d) Any content You send, transmit, or display using the Software;
+  (e) Any dispute between You and any recipient, third party, internet
+      service provider, email provider, hosting provider, or government
+      authority;
+  (f) Any claim that Your use of the Software caused damage to a third
+      party.
+
+This indemnification obligation will survive termination of this
+Agreement and Your use of the Software.
+
+================================================================================
+4. NO MONITORING — TOOL PROVIDER STATUS
+================================================================================
+
+The Publisher is a software vendor providing a tool. The Publisher does
+NOT:
+
+  • Read, store, monitor, or analyze the content of messages You send;
+  • Maintain or have access to Your recipient lists;
+  • Have access to Your SMTP credentials beyond the encrypted form
+    stored locally on Your own device;
+  • Endorse, approve, ratify, or condone any content, recipient
+    selection, or sending practice of any user;
+  • Act as a sender, mailer, broker, or agent for Your messages.
+
+The Publisher is analogous to a manufacturer of envelopes, paper, or
+postal equipment: the manufacturer is not responsible for the content
+mailed by the buyer of those goods. The Publisher's role ends at the
+delivery of the Software.
+
+================================================================================
+5. LICENSE GRANT AND ACTIVATION
+================================================================================
+
+Subject to Your continued compliance with this Agreement and the
+activation of a valid license key, the Publisher grants You a limited,
+revocable, non-exclusive, non-transferable, non-sublicensable license to
+install and use the Software on devices that You own or control, solely
+for Your internal use as permitted by this Agreement.
+
+The Software requires activation with a valid license key. Each license
+key is bound to a specific machine identifier. The Publisher reserves the
+right to revoke any license key at any time, without refund, if it has
+reasonable grounds to believe the licensee is engaged in any prohibited
+use.
+
+================================================================================
+6. AUTOMATIC UPDATES
+================================================================================
+
+The Software includes an automatic update feature that periodically
+connects to the official MailFlow release server to check for and
+download new versions, security patches, and bug fixes. By installing the
+Software, You consent to the receipt of such updates. You may decline
+individual updates from within the Software. The Publisher reserves the
+right to push security updates that protect the integrity of the Software
+or its users without prior notification.
+
+================================================================================
+7. DATA, PRIVACY, AND LOCAL STORAGE
+================================================================================
+
+The Software stores Your campaigns, recipient lists, SMTP credentials,
+sending history, and related data LOCALLY on Your device only. SMTP
+passwords and API keys are encrypted at rest using AES-256-CBC. The
+Software does NOT transmit Your contact lists, campaign content,
+recipient data, or message contents to any external server operated by
+the Publisher, except for the periodic license validation check with the
+official MailFlow license server (which transmits only the license key
+and machine identifier).
+
+You are solely responsible for the security of Your device, Your local
+data backups, and the consequences of any data loss, device theft, or
+unauthorized access to Your installation.
+
+================================================================================
+8. THIRD-PARTY SERVICES
+================================================================================
+
+The Software may interact with third-party email service providers
+(generic SMTP servers, SendGrid, Mailgun, Amazon SES, Postmark,
+SparkPost, Google Workspace, Microsoft 365, and others) at Your
+direction. You are solely responsible for:
+
+  (a) Maintaining valid accounts with these providers;
+  (b) Complying with the terms of service, acceptable use policies, and
+      sending limits of every provider You connect to;
+  (c) Any fees, charges, or penalties imposed by these providers;
+  (d) Any deliverability issues, blocklisting, or reputation damage
+      associated with Your sending activity through these providers.
+
+The Publisher is not affiliated with any third-party email service
+provider and disclaims all responsibility for the performance, policies,
+and practices of those providers.
+
+================================================================================
+9. NO WARRANTY — "AS IS"
+================================================================================
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITH ALL FAULTS AND
+WITHOUT WARRANTY OF ANY KIND, EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE.
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE PUBLISHER
+DISCLAIMS ALL WARRANTIES, INCLUDING WITHOUT LIMITATION:
+
+  • IMPLIED WARRANTIES OF MERCHANTABILITY;
+  • IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE;
+  • IMPLIED WARRANTIES OF NON-INFRINGEMENT;
+  • WARRANTIES THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE,
+    SECURE, FREE OF VIRUSES, OR FREE OF HARMFUL COMPONENTS;
+  • WARRANTIES THAT EMAIL DELIVERY WILL OCCUR, BE TIMELY, REACH THE
+    RECIPIENT'S INBOX, OR AVOID SPAM FILTERS;
+  • WARRANTIES THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS OR
+    EXPECTATIONS;
+  • WARRANTIES OF ACCURACY OR RELIABILITY OF ANY INFORMATION OBTAINED
+    THROUGH THE SOFTWARE.
+
+NO ORAL OR WRITTEN INFORMATION OR ADVICE GIVEN BY THE PUBLISHER OR ITS
+REPRESENTATIVES SHALL CREATE ANY WARRANTY.
+
+================================================================================
+10. LIMITATION OF LIABILITY
+================================================================================
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL THE
+PUBLISHER, ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS,
+SUPPLIERS, OR LICENSORS BE LIABLE FOR ANY:
+
+  • INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR
+    PUNITIVE DAMAGES;
+  • LOSS OF PROFITS, REVENUE, BUSINESS, GOODWILL, DATA, OR USE;
+  • COST OF SUBSTITUTE GOODS OR SERVICES;
+  • DAMAGES RESULTING FROM EMAIL DELIVERY FAILURES, BLOCKLISTING,
+    DOMAIN REPUTATION DAMAGE, OR ACCOUNT SUSPENSIONS BY ANY EMAIL
+    SERVICE PROVIDER;
+  • DAMAGES RESULTING FROM LEGAL ACTIONS BROUGHT AGAINST YOU BY
+    RECIPIENTS, REGULATORS, COMPETITORS, OR ANY OTHER THIRD PARTY;
+  • DAMAGES RESULTING FROM YOUR FAILURE TO COMPLY WITH ANY ANTI-SPAM,
+    PRIVACY, OR DATA PROTECTION LAW.
+
+THESE LIMITATIONS APPLY WHETHER THE ALLEGED LIABILITY IS BASED ON
+CONTRACT, TORT, NEGLIGENCE, STRICT LIABILITY, OR ANY OTHER LEGAL THEORY,
+EVEN IF THE PUBLISHER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGES.
+
+THE PUBLISHER'S TOTAL CUMULATIVE LIABILITY TO YOU FOR ANY AND ALL CLAIMS
+ARISING OUT OF OR RELATED TO THIS AGREEMENT OR THE SOFTWARE WILL NOT
+EXCEED THE LESSER OF (A) THE AMOUNT YOU PAID THE PUBLISHER FOR THE
+SOFTWARE LICENSE IN THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING
+RISE TO THE CLAIM, OR (B) FIFTY UNITED STATES DOLLARS ($50.00 USD).
+
+SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OF CERTAIN WARRANTIES OR
+THE LIMITATION OF LIABILITY FOR CERTAIN DAMAGES, SO SOME OF THE ABOVE
+LIMITATIONS MAY NOT APPLY TO YOU. IN SUCH JURISDICTIONS, THE PUBLISHER'S
+LIABILITY IS LIMITED TO THE FULLEST EXTENT PERMITTED BY LAW.
+
+================================================================================
+11. EXPORT COMPLIANCE
+================================================================================
+
+You agree to comply with all applicable export and re-export control laws
+and regulations, including the U.S. Export Administration Regulations
+(EAR), trade and economic sanctions maintained by the U.S. Treasury
+Department's Office of Foreign Assets Control (OFAC), and any other
+applicable export laws of any other country. You represent and warrant
+that You are not located in, under the control of, or a national or
+resident of any country to which the United States has embargoed goods
+or services, and You are not on any U.S. government list of prohibited
+or restricted parties.
+
+================================================================================
+12. INTELLECTUAL PROPERTY
+================================================================================
+
+The Software and all copies thereof, including all intellectual property
+rights therein, remain the exclusive property of the Publisher and its
+licensors. This Agreement does not transfer any ownership rights. All
+trademarks, service marks, trade names, logos, and brands appearing in
+the Software are the property of their respective owners. You receive no
+right or license to use any of these trademarks except as expressly
+provided in this Agreement.
+
+================================================================================
+13. TERMINATION
+================================================================================
+
+This Agreement is effective until terminated. Your rights under this
+Agreement will terminate AUTOMATICALLY AND IMMEDIATELY without notice
+from the Publisher if You fail to comply with any term of this Agreement,
+or if the Publisher reasonably believes You have engaged in any of the
+prohibited uses described in Section 2. Upon termination, You must:
+
+  (a) Cease all use of the Software immediately;
+  (b) Uninstall the Software from all devices;
+  (c) Destroy all copies of the Software in Your possession or control.
+
+Sections 1, 2, 3, 4, 7, 9, 10, 11, 12, 14, and 15 will survive any
+termination of this Agreement.
+
+================================================================================
+14. GOVERNING LAW AND DISPUTE RESOLUTION
+================================================================================
+
+This Agreement shall be governed by and construed in accordance with the
+laws of the jurisdiction in which the Publisher is established, without
+regard to its conflict of law provisions. Any dispute, claim, or
+controversy arising out of or relating to this Agreement, or the breach,
+termination, enforcement, interpretation, or validity thereof, shall be
+resolved exclusively through binding individual arbitration, except that
+either party may seek injunctive or other equitable relief in any court
+of competent jurisdiction to protect intellectual property rights.
+
+YOU AGREE THAT ANY DISPUTE RESOLUTION PROCEEDINGS WILL BE CONDUCTED ONLY
+ON AN INDIVIDUAL BASIS AND NOT IN A CLASS, CONSOLIDATED, OR
+REPRESENTATIVE ACTION. YOU WAIVE ANY RIGHT TO PARTICIPATE IN A CLASS
+ACTION LAWSUIT OR CLASS-WIDE ARBITRATION.
+
+================================================================================
+15. ENTIRE AGREEMENT — SEVERABILITY — NO WAIVER
+================================================================================
+
+This Agreement constitutes the entire agreement between You and the
+Publisher concerning the Software and supersedes all prior or
+contemporaneous oral or written communications, proposals,
+representations, and agreements with respect to the Software. If any
+provision of this Agreement is held to be invalid, illegal, or
+unenforceable, the remaining provisions shall continue in full force and
+effect. The Publisher's failure to enforce any right or provision of
+this Agreement will not constitute a waiver of such right or provision.
+
+================================================================================
+16. CHANGES TO THIS AGREEMENT
+================================================================================
+
+The Publisher may update this Agreement from time to time. Continued use
+of the Software after changes constitutes acceptance of the revised
+terms. Material changes will be communicated through the Software's
+update mechanism.
+
+================================================================================
+17. CONTACT
+================================================================================
+
+For questions about this License Agreement, contact support through the
+official MailFlow support channels.
+
+
+================================================================================
+ACKNOWLEDGEMENT
+================================================================================
+
+BY CLICKING "I AGREE" BELOW AND PROCEEDING WITH THE INSTALLATION, YOU
+EXPRESSLY ACKNOWLEDGE AND AGREE THAT:
+
+  1. You have read this entire Agreement;
+  2. You understand each provision of this Agreement;
+  3. You agree to be bound by all of its terms;
+  4. You will use the Software EXCLUSIVELY for lawful purposes;
+  5. You will NEVER use the Software for any illicit, illegal,
+     fraudulent, or harmful activity;
+  6. You assume FULL AND SOLE RESPONSIBILITY for Your use of the
+     Software and the consequences thereof;
+  7. You agree to indemnify and hold harmless the Publisher from any
+     claim arising out of Your use of the Software.
+
+IF YOU DO NOT AGREE WITH ALL OF THE ABOVE, CLICK "DECLINE" AND DO NOT
+INSTALL THE SOFTWARE.
