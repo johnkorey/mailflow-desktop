@@ -6,6 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     name TEXT,
     is_active INTEGER DEFAULT 1,
+    test_email TEXT,
+    test_interval INTEGER DEFAULT 50,
+    test_enabled INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

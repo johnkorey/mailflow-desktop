@@ -54,6 +54,25 @@ function runMigrations() {
         // Table might not exist yet
     }
 
+    // Add deliverability-test columns to users if missing
+    try {
+        const userCols = db.prepare("PRAGMA table_info(users)").all();
+        if (!userCols.some(col => col.name === 'test_email')) {
+            db.exec("ALTER TABLE users ADD COLUMN test_email TEXT");
+            console.log('Added test_email column to users');
+        }
+        if (!userCols.some(col => col.name === 'test_interval')) {
+            db.exec("ALTER TABLE users ADD COLUMN test_interval INTEGER DEFAULT 50");
+            console.log('Added test_interval column to users');
+        }
+        if (!userCols.some(col => col.name === 'test_enabled')) {
+            db.exec("ALTER TABLE users ADD COLUMN test_enabled INTEGER DEFAULT 0");
+            console.log('Added test_enabled column to users');
+        }
+    } catch (error) {
+        // Columns already exist
+    }
+
     // Create app_settings table if it doesn't exist (for upgrades from old schema)
     try {
         db.exec(`
