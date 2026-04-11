@@ -1,0 +1,93 @@
+{
+  "name": "mailflow-desktop",
+  "version": "1.0.0",
+  "description": "MailFlow - Email Sender Desktop Application",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "author": "MailFlow",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "electron:dev": "unset ELECTRON_RUN_AS_NODE && electron .",
+    "electron:build": "electron-builder",
+    "electron:pack": "electron-builder --dir",
+    "electron:publish": "electron-builder --publish always",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.2.0",
+    "base-64": "^1.0.0",
+    "base64-js": "^1.5.1",
+    "better-sqlite3": "^12.8.0",
+    "dotenv": "^17.2.3",
+    "electron-updater": "^6.8.3",
+    "express": "^4.18.2",
+    "global-agent": "^3.0.0",
+    "http-proxy-agent": "^7.0.0",
+    "https-proxy-agent": "^7.0.2",
+    "mime-types": "^2.1.35",
+    "multer": "^1.4.5-lts.1",
+    "node-html-to-image": "^4.0.0",
+    "nodemailer": "^6.9.9",
+    "p-limit": "^4.0.0",
+    "proxy-agent": "^6.3.1",
+    "puppeteer-core": "^24.40.0",
+    "qrcode": "^1.5.4",
+    "socks": "^2.7.1",
+    "socks-proxy-agent": "^8.0.2",
+    "tunnel": "^0.0.6",
+    "utf8": "^3.0.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "electron": "^33.3.1",
+    "electron-builder": "^25.0.0",
+    "jimp": "^1.6.0",
+    "png-to-ico": "^3.0.1"
+  },
+  "build": {
+    "appId": "com.mailflow.desktop",
+    "productName": "MailFlow 2.0",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "database/**/*",
+      "middleware/**/*",
+      "routes/**/*",
+      "services/**/*",
+      "public/**/*",
+      "server.mjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "database/schema.sql",
+        "to": "database/schema.sql"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/img/logo.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/img/logo.ico",
+      "uninstallerIcon": "public/img/logo.ico",
+      "shortcutName": "MailFlow 2.0"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "johnkorey",
+        "repo": "mailflow-desktop",
+        "releaseType": "release"
+      }
+    ],
+    "asar": true
+  }
+}

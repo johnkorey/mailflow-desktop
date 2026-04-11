@@ -1,0 +1,2145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MailFlow 2.0</title>
+    <style>
+/* ============================================================
+   MAILFLOW DESKTOP — Purpose-built Electron UI
+   ============================================================ */
+
+/* --- Reset & Base --- */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;overflow:hidden;
+  font-family:var(--font);
+  font-size:13px;line-height:1.5;
+  color:var(--text);background:var(--bg-base);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+  font-feature-settings:'cv11','ss01';
+}
+::selection{background:var(--accent-soft);color:var(--text)}
+
+/* --- Theme Variables ---
+   Tuned for professional dark-mode apps: deeper neutrals, softer contrast,
+   cooler accent, consistent elevation layers.
+*/
+:root{
+  /* Surfaces — consistent 4-layer elevation system */
+  --bg-base:#0a0a12;        /* app background (lowest) */
+  --bg-1:#11111c;           /* chrome: titlebar + ribbon */
+  --bg-2:#18182a;           /* cards */
+  --bg-3:#1f1f36;           /* inputs, hover states */
+  --bg-4:#292944;           /* secondary button hover */
+
+  /* Text — improved contrast ratios */
+  --text:#e8e8f4;           /* primary — 14:1 on bg-base */
+  --text-2:#a2a2c0;         /* secondary — 7:1 */
+  --text-3:#6f6f95;         /* tertiary / placeholder — 4.5:1 */
+
+  /* Brand — slightly cooler purple with more saturation */
+  --accent:#8b5cf6;
+  --accent-hover:#7c3aed;
+  --accent-active:#6d28d9;
+  --accent-soft:rgba(139,92,246,.12);
+  --accent-glow:rgba(139,92,246,.22);
+  --accent-ring:rgba(139,92,246,.35);
+
+  /* Status colors — softer and more harmonious */
+  --green:#10b981;
+  --green-soft:rgba(16,185,129,.14);
+  --yellow:#f59e0b;
+  --yellow-soft:rgba(245,158,11,.14);
+  --red:#ef4444;
+  --red-soft:rgba(239,68,68,.14);
+  --blue:#3b82f6;
+  --blue-soft:rgba(59,130,246,.14);
+
+  /* Borders — warm up the layer separation */
+  --border:rgba(255,255,255,.06);
+  --border-2:rgba(255,255,255,.11);
+  --border-hi:rgba(255,255,255,.18);
+
+  /* Radii — tighter, more Microsoft-like */
+  --radius:6px;
+  --radius-sm:4px;
+  --radius-lg:10px;
+
+  /* Typography */
+  --font:'Segoe UI Variable','Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+  --mono:'Cascadia Code','JetBrains Mono','Consolas','Courier New',monospace;
+
+  /* Elevation */
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow:0 4px 12px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.2);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.45),0 4px 12px rgba(0,0,0,.25);
+  --shadow-focus:0 0 0 3px var(--accent-ring);
+}
+
+a{color:var(--accent);text-decoration:none}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg-4);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
+
+/* ============ APP SHELL ============ */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* --- Title Bar (32px) --- */
+.titlebar{
+  height:36px;min-height:36px;
+  background:var(--bg-1);
+  display:flex;align-items:center;justify-content:space-between;
+  -webkit-app-region:drag;
+  user-select:none;
+  padding:0 14px;
+}
+.titlebar-brand{
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;font-weight:800;letter-spacing:.6px;
+  color:#fff;text-transform:uppercase;
+  text-shadow:0 1px 6px rgba(139,92,246,.6),0 0 16px rgba(0,0,0,.5);
+  padding:4px 12px;
+}
+.titlebar-brand svg{width:15px;height:15px;color:var(--accent);filter:drop-shadow(0 0 6px rgba(139,92,246,.7))}
+/* When a background image is active, give the brand a subtle pill so it
+   stays legible against any wallpaper. */
+body.has-bg-image .titlebar-brand{
+  background:rgba(139,92,246,.15);
+  border:1px solid rgba(139,92,246,.35);
+  border-radius:99px;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.titlebar-controls{display:flex;-webkit-app-region:no-drag;align-self:stretch}
+.titlebar-btn{
+  width:44px;height:36px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;color:var(--text-2);font-size:12px;cursor:pointer;
+  transition:background .12s ease,color .12s ease;
+}
+.titlebar-btn:hover{background:rgba(255,255,255,.07);color:var(--text)}
+.titlebar-btn.close:hover{background:#e81123;color:#fff}
+
+/* --- Ribbon --- */
+.ribbon{background:var(--bg-1);border-bottom:1px solid var(--border);flex-shrink:0;-webkit-app-region:no-drag;box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.ribbon-tabs{display:flex;gap:0;padding:0 14px;border-bottom:1px solid var(--border)}
+.ribbon-tab{
+  padding:6px 20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;
+  color:var(--text-3);background:none;border:none;
+  position:relative;cursor:pointer;
+  transition:color .15s ease;
+}
+.ribbon-tab::after{
+  content:'';position:absolute;left:16px;right:16px;bottom:-1px;height:2px;
+  background:var(--accent);border-radius:2px 2px 0 0;
+  transform:scaleX(0);transform-origin:center;
+  transition:transform .2s ease;
+}
+.ribbon-tab:hover{color:var(--text-2)}
+.ribbon-tab.active{color:var(--accent)}
+.ribbon-tab.active::after{transform:scaleX(1)}
+
+/* Ribbon panels */
+.ribbon-panel{height:62px;display:none;align-items:center;padding:0 12px;gap:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.ribbon-panel::-webkit-scrollbar{height:4px}
+.ribbon-panel::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px}
+.ribbon-panel.active{display:flex}
+.ribbon-group{
+  display:flex;align-items:flex-end;gap:2px;padding:0 12px;position:relative;height:100%;
+  flex-shrink:0;
+}
+.ribbon-group::after{
+  content:'';position:absolute;right:0;top:10px;bottom:14px;width:1px;
+  background:linear-gradient(180deg,transparent 0%,var(--border-2) 20%,var(--border-2) 80%,transparent 100%);
+}
+.ribbon-group:last-child::after{display:none}
+.ribbon-group-btns{display:flex;align-items:center;gap:3px;padding-bottom:14px}
+.ribbon-group-label{
+  position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--text-3);white-space:nowrap;
+}
+
+/* Ribbon buttons — tactile, clear hover/active feedback */
+.rbtn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-width:50px;padding:4px 8px;height:42px;
+  background:none;border:1px solid transparent;border-radius:var(--radius-sm);
+  cursor:pointer;color:var(--text-2);
+  transition:background .15s ease,color .15s ease,border-color .15s ease,transform .08s ease;
+}
+.rbtn:hover{background:rgba(255,255,255,.04);color:var(--text);border-color:var(--border)}
+.rbtn:active{transform:translateY(1px)}
+.rbtn.active{background:var(--accent-soft);color:var(--accent);border-color:rgba(139,92,246,.3)}
+.rbtn.active:hover{background:var(--accent-glow)}
+.rbtn svg{width:18px;height:18px;flex-shrink:0;stroke-width:1.75}
+.rbtn span{font-size:9px;font-weight:500;white-space:nowrap;line-height:1.1;letter-spacing:.1px}
+
+/* ============ WORKSPACE ============ */
+.workspace{flex:1;overflow:hidden;background:var(--bg-base);min-height:0;-webkit-app-region:no-drag}
+.page{display:none;height:100%;overflow:hidden;padding:14px 18px;flex-direction:column}
+.page.active{display:flex;animation:pageFadeIn .22s ease-out}
+@keyframes pageFadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0}
+.page-hdr h1{font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.2px;line-height:1.2}
+.page-hdr p{font-size:11px;color:var(--text-2);margin-top:1px}
+.page-hdr-actions{display:flex;align-items:center;gap:0}
+.page-fill{flex:1;min-height:0;display:flex;flex-direction:column}
+
+/* ============ COMPONENTS ============ */
+
+/* --- Card — consistent elevation and tighter spacing --- */
+.card{
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  display:flex;flex-direction:column;min-height:0;
+  box-shadow:var(--shadow-sm);
+  transition:border-color .15s ease;
+}
+.card:hover{border-color:var(--border-2)}
+.card.card-fill{flex:1}
+.card-hdr{
+  padding:9px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.015) 0%,transparent 100%);
+}
+.card-hdr h3{font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
+.card-body{padding:12px 14px;overflow-y:auto;flex:1;min-height:0}
+
+/* --- Table — refined spacing and hover --- */
+.tbl-wrap{overflow:auto;flex:1;min-height:0}
+table{width:100%;border-collapse:collapse}
+thead{position:sticky;top:0;z-index:1}
+th{
+  padding:8px 14px;text-align:left;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--text-3);background:var(--bg-3);
+  border-bottom:1px solid var(--border-2);
+}
+td{
+  padding:8px 14px;font-size:12px;color:var(--text-2);
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+tr:last-child td{border-bottom:none}
+tr{transition:background .12s ease}
+tr:hover td{background:rgba(255,255,255,.025)}
+
+/* --- Buttons — refined states, subtle shadows --- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:6px 14px;font-size:12px;font-weight:600;
+  border:1px solid transparent;border-radius:var(--radius-sm);cursor:pointer;
+  transition:background .15s ease,border-color .15s ease,transform .08s ease,box-shadow .15s ease;
+  white-space:nowrap;font-family:inherit;letter-spacing:.1px;
+  user-select:none;
+}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:none;box-shadow:var(--shadow-focus)}
+.btn svg{width:14px;height:14px;stroke-width:2}
+
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,var(--shadow-sm)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:active{background:var(--accent-active)}
+
+.btn-secondary{background:var(--bg-3);color:var(--text);border-color:var(--border-2)}
+.btn-secondary:hover{background:var(--bg-4);border-color:var(--border-hi)}
+.btn-secondary.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:#059669}
+.btn-info{background:var(--blue);color:#fff}
+.btn-info:hover{background:#2563eb}
+
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-sm svg{width:12px;height:12px}
+
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+/* --- Forms — focus ring + refined input style --- */
+.form-group{margin-bottom:9px}
+.form-label{
+  display:block;font-size:11px;font-weight:600;
+  color:var(--text-2);margin-bottom:4px;
+  letter-spacing:.1px;
+}
+.form-input{
+  width:100%;padding:6px 10px;font-size:12px;color:var(--text);
+  background:var(--bg-3);border:1px solid var(--border-2);border-radius:var(--radius-sm);
+  outline:none;font-family:inherit;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.form-input:hover{border-color:var(--border-hi)}
+.form-input:focus{border-color:var(--accent);box-shadow:var(--shadow-focus)}
+.form-input::placeholder{color:var(--text-3)}
+textarea.form-input{resize:vertical;min-height:44px;font-family:var(--font)}
+select.form-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23a2a2c0' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.form-input:disabled{opacity:.55;cursor:not-allowed}
+.form-row{display:flex;gap:12px}
+.form-hint{font-size:11px;color:var(--text-3);margin-top:4px;line-height:1.4}
+.form-row>.form-group{flex:1}
+.code-editor{font-family:var(--mono);font-size:12px;line-height:1.6;tab-size:2}
+
+/* --- Modals — elevated surface with entry animation --- */
+.modal-overlay{
+  position:fixed;inset:0;z-index:1000;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  -webkit-app-region:no-drag;
+  animation:overlayIn .18s ease-out;
+}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-overlay.active{display:flex}
+.modal{
+  background:var(--bg-2);
+  border:1px solid var(--border-2);
+  border-radius:var(--radius-lg);
+  width:560px;max-width:95vw;max-height:90vh;
+  display:flex;flex-direction:column;
+  box-shadow:var(--shadow-lg);
+  animation:modalIn .22s cubic-bezier(.16,1,.3,1);
+}
+.modal-lg{width:840px}
+.modal-xl{width:1020px}
+.modal-header{
+  padding:16px 22px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.015) 0%,transparent 100%);
+}
+.modal-header h3{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.1px}
+.modal-close{
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;color:var(--text-3);cursor:pointer;border-radius:var(--radius-sm);
+  transition:background .12s ease,color .12s ease;
+}
+.modal-close:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.modal-close svg{width:18px;height:18px}
+.modal-body{flex:1;overflow-y:auto;padding:20px}
+.modal-footer{
+  padding:14px 22px;display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  border-top:1px solid var(--border);flex-shrink:0;
+  background:rgba(0,0,0,.08);
+}
+
+/* --- Toast — refined surface, slide-in animation --- */
+.toast-container{position:fixed;top:44px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:10px}
+.toast{
+  padding:12px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;
+  color:#fff;display:flex;align-items:center;gap:10px;
+  animation:toastIn .28s cubic-bezier(.16,1,.3,1);
+  min-width:280px;max-width:440px;
+  box-shadow:var(--shadow-lg);
+  border:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.toast-info{background:rgba(37,99,235,.94)}
+.toast-success{background:rgba(5,150,105,.94)}
+.toast-warning{background:rgba(217,119,6,.94)}
+.toast-error{background:rgba(220,38,38,.94)}
+@keyframes toastIn{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
+
+/* --- Stats --- */
+.stats-row{display:flex;gap:12px;margin-bottom:16px;flex-shrink:0}
+.stat-card{
+  flex:1;display:flex;align-items:center;gap:12px;
+  padding:14px 16px;
+  background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  transition:border-color .15s ease,transform .15s ease;
+}
+.stat-card:hover{border-color:var(--border-2);transform:translateY(-1px)}
+.stat-icon{
+  width:42px;height:42px;border-radius:var(--radius);
+  display:flex;align-items:center;justify-content:center;
+  background:var(--accent-soft);color:var(--accent);flex-shrink:0;
+}
+.stat-icon.success{background:var(--green-soft);color:var(--green)}
+.stat-icon.warning{background:var(--yellow-soft);color:var(--yellow)}
+.stat-icon.danger{background:var(--red-soft);color:var(--red)}
+.stat-icon svg{width:20px;height:20px;stroke-width:2}
+.stat-value{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.4px;line-height:1.1}
+.stat-label{font-size:11px;color:var(--text-3);font-weight:500;letter-spacing:.1px;margin-top:2px}
+
+/* --- Badges --- */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;font-size:10px;font-weight:700;
+  border-radius:99px;text-transform:uppercase;letter-spacing:.4px;
+  line-height:1.3;
+}
+.badge-green,.badge-success{background:var(--green-soft);color:var(--green)}
+.badge-yellow,.badge-warning{background:var(--yellow-soft);color:var(--yellow)}
+.badge-red,.badge-danger{background:var(--red-soft);color:var(--red)}
+.badge-blue,.badge-info{background:var(--blue-soft);color:var(--blue)}
+.badge-gray,.badge-default{background:var(--bg-3);color:var(--text-3)}
+
+/* --- Progress Bar --- */
+.progress{height:8px;background:var(--bg-3);border-radius:99px;overflow:hidden}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--accent),#a78bfa);
+  transition:width .4s cubic-bezier(.16,1,.3,1);
+  border-radius:99px;
+  box-shadow:0 0 8px rgba(139,92,246,.4);
+}
+
+/* --- Settings Tabs --- */
+.stabs{display:flex;gap:6px;padding:12px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.stab{
+  padding:6px 14px;font-size:12px;font-weight:600;
+  background:var(--bg-3);color:var(--text-3);border:1px solid var(--border);border-radius:var(--radius-sm);
+  cursor:pointer;transition:all .12s;
+}
+.stab:hover{color:var(--text-2);background:var(--bg-4)}
+.stab.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.stab-content{padding:18px;display:none}
+.stab-content.active{display:block}
+
+/* --- Utilities --- */
+.hidden{display:none!important}
+.text-center{text-align:center}
+.text-muted{color:var(--text-3)}
+.text-success{color:var(--green)}
+.text-danger{color:var(--red)}
+.text-primary{color:var(--text)}
+.flex{display:flex}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+.gap-sm{gap:8px}
+.gap-md{gap:14px}
+.mt-sm{margin-top:8px}
+.mt-md{margin-top:14px}
+.mt-lg{margin-top:20px}
+.mb-sm{margin-bottom:8px}
+.mb-md{margin-bottom:14px}
+.mb-lg{margin-bottom:20px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full-w{width:100%}
+/* Canonical card grid — use this whenever a page has multiple cards side by side */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;flex:1;min-height:0;overflow-y:auto;align-content:start}
+.card-grid-fixed-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:0;overflow-y:auto;align-content:start}
+.card-grid .card,.card-grid-fixed-2 .card{min-height:0}
+.card-grid .card-body,.card-grid-fixed-2 .card-body{overflow:visible}
+.card-grid-span-all{grid-column:1/-1}
+/* Inline label (for checkboxes next to text) */
+.form-label-inline{display:flex;align-items:center;gap:8px}
+/* Horizontal button row */
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+/* Read-only display fields (used on Account page etc) */
+.form-input-readonly{opacity:.6;cursor:default}
+.form-input-mono{font-family:var(--mono);font-size:11px;word-break:break-all}
+/* Placeholders page — usage examples */
+.usage-examples{display:flex;gap:20px;flex-wrap:wrap}
+.usage-example{flex:1;min-width:250px}
+.usage-example-code{background:var(--bg-3);padding:6px 10px;border-radius:var(--radius-sm);font-family:var(--mono);font-size:11px;color:var(--text-2);margin-top:3px}
+/* Two-column split layout (sidebar + main) used by Inbox Finder */
+.split-2col{display:flex;gap:12px;flex:1;min-height:0}
+.split-2col-side{width:420px;flex-shrink:0;display:flex;flex-direction:column;min-height:0}
+.split-2col-main{flex:1;display:flex;flex-direction:column;min-height:0}
+/* Empty state — used inside cards when there is no data */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-3)}
+.empty-state-icon{color:var(--text-3);margin-bottom:12px;display:block;margin-left:auto;margin-right:auto}
+.empty-state-title{color:var(--text);margin-bottom:6px;font-size:14px;font-weight:700}
+.empty-state-text{color:var(--text-2);margin-bottom:14px;font-size:12px}
+/* Badge variants */
+.badge-accent{background:var(--accent-soft);color:var(--accent)}
+/* SMTP card badges container */
+.smtp-card-badges{display:flex;gap:4px;align-items:center}
+code{padding:2px 6px;background:var(--bg-3);border-radius:3px;font-family:var(--mono);font-size:12px;color:var(--accent)}
+
+/* --- Universal Item Grid (used by all list pages) --- */
+.item-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:10px;
+  overflow-y:auto;
+  flex:1;min-height:0;
+  padding:2px;
+  align-content:start;
+}
+.item-card{
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:11px 13px;
+  display:flex;flex-direction:column;gap:8px;
+  transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease;
+  box-shadow:var(--shadow-sm);
+  min-height:0;
+}
+.item-card:hover{border-color:var(--border-2);transform:translateY(-1px);box-shadow:var(--shadow)}
+.item-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.item-card-title{
+  font-size:13px;font-weight:700;color:var(--text);
+  line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  flex:1;min-width:0;
+}
+.item-card-badges{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap}
+.item-card-subtitle{
+  font-size:11px;color:var(--text-2);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.item-card-meta{
+  font-size:10px;color:var(--text-3);
+  display:flex;gap:10px;flex-wrap:wrap;
+}
+.item-card-meta strong{color:var(--text-2);font-weight:600}
+.item-card-progress{margin-top:auto}
+.item-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+
+/* --- Legacy SMTP grid — now uses .item-grid, these classes kept for compat --- */
+.smtp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;overflow-y:auto;flex:1;min-height:0;padding:2px;align-content:start}
+.smtp-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px;
+  transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease;
+  box-shadow:var(--shadow-sm);min-height:140px;
+}
+.smtp-card:hover{border-color:var(--border-2);transform:translateY(-1px);box-shadow:var(--shadow)}
+.smtp-card-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.smtp-card-name{font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.smtp-card-host{font-size:12px;color:var(--text-3);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.smtp-card-actions{display:flex;gap:6px;margin-top:auto;padding-top:4px}
+
+/* --- View Toggle (grid/list switcher in page headers) --- */
+.view-toggle{
+  display:inline-flex;
+  background:var(--bg-3);
+  border:1px solid var(--border-2);
+  border-radius:var(--radius-sm);
+  overflow:hidden;
+  margin-right:8px;
+}
+.view-toggle button{
+  background:none;border:none;cursor:pointer;
+  padding:6px 10px;
+  color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;
+  transition:background .12s ease,color .12s ease;
+}
+.view-toggle button:hover{background:rgba(255,255,255,.04);color:var(--text-2)}
+.view-toggle button.active{background:var(--accent-soft);color:var(--accent)}
+.view-toggle button svg{width:14px;height:14px;stroke-width:2}
+
+/* --- Responsive item grid: stays at 300px minimum but fills wider --- */
+@media (min-width:1600px){
+  .item-grid,.smtp-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+}
+
+/* --- Section Box --- */
+.section-box{background:var(--bg-3);padding:10px;border-radius:var(--radius);margin-bottom:10px}
+.section-box h4{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px}
+
+/* --- Recipients drag-drop zone --- */
+.recipients-dropzone{position:relative}
+.recipients-dropzone .dropzone-overlay{
+    display:none;position:absolute;inset:0;
+    background:rgba(124,58,237,.12);border:2px dashed var(--accent);
+    border-radius:var(--radius);align-items:center;justify-content:center;
+    color:var(--accent);font-weight:700;font-size:13px;pointer-events:none
+}
+.recipients-dropzone.dragging .dropzone-overlay{display:flex}
+.recipients-dropzone.dragging textarea{opacity:.4}
+
+/* --- Draft restore banner (campaign modal) --- */
+.draft-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:var(--radius);margin-bottom:14px;color:var(--text);font-size:12px}
+.draft-banner svg{color:var(--yellow);flex-shrink:0}
+.draft-banner .draft-time{font-weight:600}
+.draft-banner .btn-row{margin-left:auto}
+
+/* --- Custom background image (user-uploaded) --- */
+/* The image sits on the body as a fixed layer. The .app overlay dims it. */
+body.has-bg-image{
+    background-size:cover;
+    background-position:center center;
+    background-repeat:no-repeat;
+    background-attachment:fixed;
+}
+body.has-bg-image .app{
+    background:transparent;
+}
+body.has-bg-image .app::before{
+    content:'';
+    position:fixed;inset:0;z-index:0;
+    background:var(--bg-base);
+    opacity:var(--bg-dim, .75);
+    backdrop-filter:blur(var(--bg-blur, 0px));
+    -webkit-backdrop-filter:blur(var(--bg-blur, 0px));
+    pointer-events:none;
+}
+body.has-bg-image .app > *{
+    position:relative;z-index:1;
+}
+/* Chrome surfaces (ribbon, titlebar, strip) become slightly translucent so the
+   dimmed background shows through them too — more immersive feel. */
+body.has-bg-image .titlebar,
+body.has-bg-image .ribbon,
+body.has-bg-image .running-strip{
+    background:rgba(17,17,28,.75);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+}
+body.has-bg-image .workspace{
+    background:transparent;
+}
+body.has-bg-image .page{
+    background:transparent;
+}
+
+/* Modals — let the background image bleed through with light frosted glass.
+   Aggressive transparency so the wallpaper is clearly visible. */
+body.has-bg-image .modal-overlay{
+    background:rgba(0,0,0,.08);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+}
+body.has-bg-image .modal{
+    background:rgba(24,24,42,.42);
+    backdrop-filter:blur(28px) saturate(160%);
+    -webkit-backdrop-filter:blur(28px) saturate(160%);
+    border-color:rgba(255,255,255,.18);
+}
+body.has-bg-image .modal-header,
+body.has-bg-image .modal-footer{
+    background:rgba(0,0,0,.18);
+}
+/* Inputs inside modals — translucent enough to feel like glass but readable */
+body.has-bg-image .modal .form-input,
+body.has-bg-image .modal select,
+body.has-bg-image .modal textarea{
+    background:rgba(15,15,30,.55);
+    border-color:rgba(255,255,255,.18);
+}
+/* Page cards: same aggressive translucency */
+body.has-bg-image .card{
+    background:rgba(24,24,42,.40);
+    backdrop-filter:blur(20px) saturate(150%);
+    -webkit-backdrop-filter:blur(20px) saturate(150%);
+    border-color:rgba(255,255,255,.12);
+}
+body.has-bg-image .card-hdr{
+    background:rgba(0,0,0,.18);
+}
+body.has-bg-image .item-card{
+    background:rgba(24,24,42,.45);
+    backdrop-filter:blur(16px) saturate(150%);
+    -webkit-backdrop-filter:blur(16px) saturate(150%);
+    border-color:rgba(255,255,255,.12);
+}
+
+/* Preview thumbnail on Account page */
+.bg-preview{
+    width:100%;height:140px;
+    background:var(--bg-3);
+    background-size:cover;background-position:center;
+    border:1px solid var(--border-2);border-radius:var(--radius);
+    margin-bottom:14px;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+}
+.bg-preview-empty{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    color:var(--text-3);font-size:11px;
+}
+.bg-preview.has-image .bg-preview-empty{display:none}
+
+/* --- Update banner (above running strip) --- */
+.update-banner{
+    display:flex;align-items:center;gap:14px;
+    padding:8px 16px;
+    background:linear-gradient(90deg,rgba(139,92,246,.18),rgba(59,130,246,.18));
+    border-bottom:1px solid rgba(139,92,246,.4);
+    color:var(--text);
+    font-size:12px;
+    flex-shrink:0;
+    animation:updateBannerSlide .25s cubic-bezier(.16,1,.3,1);
+}
+@keyframes updateBannerSlide{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.update-banner-icon{
+    width:22px;height:22px;border-radius:50%;
+    background:rgba(139,92,246,.25);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--accent);flex-shrink:0;
+}
+.update-banner-icon svg{width:13px;height:13px;stroke-width:2.5}
+.update-banner-text{flex:1;min-width:0}
+.update-banner-text strong{color:var(--text);font-weight:700}
+.update-banner-text .update-progress-bar{
+    height:4px;background:rgba(255,255,255,.1);border-radius:2px;
+    margin-top:6px;overflow:hidden;max-width:320px;
+}
+.update-banner-text .update-progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--accent),#a78bfa);
+    transition:width .25s ease;
+    border-radius:2px;
+}
+.update-banner-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+
+/* --- Running campaign strip (above workspace) --- */
+.running-strip{
+    display:flex;align-items:center;gap:8px;
+    padding:6px 14px;
+    background:var(--bg-1);
+    border-bottom:1px solid var(--border);
+    overflow-x:auto;overflow-y:hidden;
+    flex-shrink:0;
+    scrollbar-width:thin;
+}
+.running-strip::-webkit-scrollbar{height:4px}
+.running-strip::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px}
+.running-strip-label{
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+    color:var(--text-3);margin-right:4px;flex-shrink:0;
+}
+.running-tab{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:5px 8px 5px 10px;
+    background:var(--bg-2);border:1px solid var(--border-2);
+    border-radius:var(--radius-sm);
+    cursor:pointer;flex-shrink:0;
+    transition:background .12s ease,border-color .12s ease;
+    font-size:11px;color:var(--text-2);
+    max-width:260px;
+}
+.running-tab:hover{background:var(--bg-3);border-color:var(--border-hi);color:var(--text)}
+.running-tab.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.running-tab-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--accent);
+    flex-shrink:0;
+    animation:running-pulse 1.4s ease-in-out infinite;
+}
+.running-tab.status-completed .running-tab-dot{background:var(--green);animation:none}
+.running-tab.status-failed .running-tab-dot{background:var(--red);animation:none}
+.running-tab.status-stopped .running-tab-dot{background:var(--yellow);animation:none}
+@keyframes running-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.running-tab-name{
+    font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    min-width:0;max-width:120px;
+}
+.running-tab-progress{
+    font-family:var(--mono);font-size:10px;font-weight:700;
+    color:inherit;opacity:.85;flex-shrink:0;
+}
+.running-tab-close{
+    display:flex;align-items:center;justify-content:center;
+    width:18px;height:18px;border-radius:3px;border:none;background:none;
+    color:inherit;cursor:pointer;opacity:.5;
+    transition:opacity .12s ease,background .12s ease;
+    flex-shrink:0;
+}
+.running-tab-close:hover{opacity:1;background:rgba(255,255,255,.1)}
+.running-tab-close svg{width:12px;height:12px;stroke-width:2.5}
+
+/* --- Campaign monitor page --- */
+.monitor-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:16px;flex-shrink:0;
+}
+.monitor-title{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.2px}
+.monitor-subtitle{font-size:12px;color:var(--text-2);margin-top:2px}
+.monitor-stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+    margin-bottom:16px;flex-shrink:0;
+}
+.monitor-stat{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 18px;
+}
+.monitor-stat-label{
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+    color:var(--text-3);margin-bottom:6px;
+}
+.monitor-stat-value{
+    font-size:24px;font-weight:700;letter-spacing:-.4px;color:var(--text);line-height:1.1;
+}
+.monitor-stat-value.success{color:var(--green)}
+.monitor-stat-value.danger{color:var(--red)}
+.monitor-stat-value.accent{color:var(--accent)}
+.monitor-progress-row{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 18px;margin-bottom:16px;flex-shrink:0;
+}
+.monitor-progress-header{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;
+}
+.monitor-progress-status{font-size:13px;font-weight:600;color:var(--text)}
+.monitor-progress-percent{font-size:16px;font-weight:700;color:var(--accent);font-family:var(--mono)}
+.monitor-log{
+    flex:1;min-height:0;
+    background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 16px;
+    font-family:var(--mono);font-size:11px;line-height:1.7;
+    color:var(--text-3);overflow-y:auto;
+}
+.monitor-log-entry{display:block}
+.monitor-log-entry.info{color:var(--text-2)}
+.monitor-log-entry.sent{color:var(--green)}
+.monitor-log-entry.failed{color:var(--red)}
+.monitor-log-entry.warning{color:var(--yellow)}
+.monitor-log-timestamp{color:var(--text-3);margin-right:8px;font-weight:400}
+
+/* --- Placeholder table specific --- */
+.ph-table td:first-child{font-family:var(--mono);font-size:12px;color:var(--accent);white-space:nowrap}
+.ph-table tr td.ph-group{font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);background:var(--bg-3);padding:6px 10px;border-top:1px solid var(--border)}
+    </style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ====== LICENSE ACTIVATION SCREEN ====== -->
+<div id="licenseScreen" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg-base);flex-direction:column;align-items:center;justify-content:center;-webkit-app-region:drag">
+    <div style="position:absolute;top:0;right:0;display:flex;-webkit-app-region:no-drag">
+        <button class="titlebar-btn" onclick="electronAPI?.minimize()" title="Minimize" style="width:46px;height:34px;background:none;border:none;color:var(--text-2);font-size:14px;cursor:pointer">&#x2013;</button>
+        <button class="titlebar-btn close" onclick="electronAPI?.close()" title="Close" style="width:46px;height:34px;background:none;border:none;color:var(--text-2);font-size:14px;cursor:pointer">&#x2715;</button>
+    </div>
+    <div style="-webkit-app-region:no-drag;text-align:center;width:400px;padding:40px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:12px;box-shadow:var(--shadow)">
+        <img src="/img/logo.jpg" alt="Logo" style="width:64px;height:64px;border-radius:12px;object-fit:cover;margin-bottom:16px">
+        <h1 style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px">MailFlow 2.0</h1>
+        <p style="color:var(--text-3);font-size:13px;margin-bottom:28px">Enter your license key to activate</p>
+        <input type="text" id="licenseKeyInput" placeholder="XXXX-XXXX-XXXX-XXXX" style="width:100%;padding:12px 14px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:var(--radius);color:var(--text);font-size:15px;font-family:var(--mono);text-align:center;letter-spacing:2px;outline:none;margin-bottom:16px" spellcheck="false">
+        <div id="licenseError" style="display:none;color:var(--red);font-size:12px;margin-bottom:12px"></div>
+        <div id="licenseSuccess" style="display:none;color:var(--green);font-size:12px;margin-bottom:12px"></div>
+        <button id="licenseActivateBtn" onclick="handleActivateLicense()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;transition:background .2s">Activate License</button>
+        <p style="color:var(--text-3);font-size:11px;margin-top:16px">Contact support if you need a license key</p>
+    </div>
+</div>
+
+<div class="app" id="mainApp" style="display:none">
+    <!-- ====== TITLE BAR ====== -->
+    <div class="titlebar">
+        <div class="titlebar-brand">
+            <img src="/img/logo.jpg" alt="Logo" style="width:20px;height:20px;border-radius:4px;object-fit:cover">
+            MAILFLOW 2.0
+        </div>
+        <div class="titlebar-controls">
+            <button class="titlebar-btn" onclick="electronAPI?.minimize()" title="Minimize">&#x2013;</button>
+            <button class="titlebar-btn" onclick="electronAPI?.maximize()" title="Maximize">&#x25A1;</button>
+            <button class="titlebar-btn close" onclick="electronAPI?.close()" title="Close">&#x2715;</button>
+        </div>
+    </div>
+
+    <!-- ====== RIBBON ====== -->
+    <div class="ribbon">
+        <div class="ribbon-tabs">
+            <button class="ribbon-tab active" onclick="switchTab('home')">Home</button>
+        </div>
+
+        <!-- HOME panel — unified nav with every group -->
+        <div class="ribbon-panel active" id="panel-home">
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <button class="rbtn active" id="rb-campaigns" onclick="go('campaigns')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <span>Campaigns</span>
+                    </button>
+                    <button class="rbtn" id="rb-smtp" onclick="go('smtp')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                        <span>SMTP</span>
+                    </button>
+                    <button class="rbtn" id="rb-recipients" onclick="go('recipients')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span>Recipients</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-label">Send</div>
+            </div>
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <button class="rbtn" id="rb-subjects" onclick="go('subjects')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span>Subjects</span>
+                    </button>
+                    <button class="rbtn" id="rb-senders" onclick="go('senders')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <span>Senders</span>
+                    </button>
+                    <button class="rbtn" id="rb-links" onclick="go('links')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        <span>Links</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-label">Rotation</div>
+            </div>
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <button class="rbtn" id="rb-attachments" onclick="go('attachments')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                        <span>Attachments</span>
+                    </button>
+                    <button class="rbtn" id="rb-templates" onclick="go('templates')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>Templates</span>
+                    </button>
+                    <button class="rbtn" id="rb-placeholders" onclick="go('placeholders')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                        <span>Placeholders</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-label">Content</div>
+            </div>
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <button class="rbtn" id="rb-inboxfinder" onclick="go('inboxFinder')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <span>Inbox Finder</span>
+                    </button>
+                    <button class="rbtn" id="rb-unsubscribes" onclick="go('unsubscribes')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"/></svg>
+                        <span>Unsubscribes</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-label">Deliverability</div>
+            </div>
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <button class="rbtn" id="rb-proxies" onclick="go('proxies')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                        <span>Proxies</span>
+                    </button>
+                    <button class="rbtn" id="rb-sending" onclick="go('sending')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>Sending</span>
+                    </button>
+                    <button class="rbtn" id="rb-account" onclick="go('account')">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Account</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-label">Config</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== UPDATE BANNER ====== -->
+    <div class="update-banner" id="updateBanner" style="display:none"></div>
+
+    <!-- ====== RUNNING CAMPAIGNS STRIP ====== -->
+    <div class="running-strip" id="runningStrip" style="display:none"></div>
+
+    <!-- ====== WORKSPACE ====== -->
+    <div class="workspace">
+
+        <!-- ===== CAMPAIGNS PAGE ===== -->
+        <div class="page active" id="campaignsPage">
+            <div class="page-hdr">
+                <div><h1>Campaigns</h1><p>Create and manage your email campaigns</p></div>
+                <div class="page-hdr-actions">
+                    <span id="viewToggle-campaigns"></span>
+                    <button class="btn btn-primary" onclick="showNewCampaignModal()">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v16m8-8H4"/></svg>
+                        New Campaign
+                    </button>
+                </div>
+            </div>
+            <div id="campaignsContainer" class="page-fill">
+                <div class="text-center text-muted">Loading...</div>
+            </div>
+        </div>
+
+        <!-- ===== CAMPAIGN MONITOR PAGE ===== -->
+        <div class="page" id="monitorPage">
+            <div id="monitorPageContent" class="page-fill"></div>
+        </div>
+
+        <!-- ===== SMTP PAGE ===== -->
+        <div class="page" id="smtpPage">
+            <div class="page-hdr">
+                <div><h1>Email Servers</h1><p>Configure SMTP and API providers</p></div>
+                <div class="page-hdr-actions">
+                    <span id="viewToggle-smtp"></span>
+                    <button class="btn btn-primary" onclick="showNewSmtpModal()">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v16m8-8H4"/></svg>
+                        Add Email Server
+                    </button>
+                </div>
+            </div>
+            <div id="smtpList" class="page-fill"><div class="text-center text-muted">Loading...</div></div>
+        </div>
+
+        <!-- ===== INBOX FINDER PAGE ===== -->
+        <div class="page" id="inboxFinderPage">
+            <div class="page-hdr"><div><h1>Inbox Finder</h1><p>Test email combinations to find valid addresses</p></div></div>
+            <div class="split-2col">
+                <!-- Left: New Test Form -->
+                <div class="split-2col-side">
+                    <div class="card card-fill">
+                        <div class="card-hdr">
+                            <h3>New Test</h3>
+                            <div style="display:flex;gap:12px">
+                                <span class="form-hint"><strong id="inboxFinderTotalTests">0</strong> tests</span>
+                                <span class="form-hint text-success"><strong id="inboxFinderTotalSent">0</strong> sent</span>
+                                <span class="form-hint text-danger"><strong id="inboxFinderTotalFailed">0</strong> failed</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <form id="inboxFinderForm">
+                                <div class="form-row">
+                                    <div class="form-group" style="flex:1"><label class="form-label">Test Name</label><input type="text" class="form-input" id="inboxTestName" placeholder="e.g., Company X Test" required></div>
+                                    <div class="form-group" style="flex:1"><label class="form-label">SMTP Server</label><select class="form-input" id="inboxTestSmtp" required><option value="">Select SMTP...</option></select></div>
+                                </div>
+                                <div class="section-box">
+                                    <h4>Sender Setup (FROM)</h4>
+                                    <div class="form-row">
+                                        <div class="form-group" style="flex:1"><label class="form-label">Usernames (one/line)</label><textarea class="form-input" id="inboxTestUsernames" rows="2" placeholder="john&#10;jane" oninput="updateInboxCombinationsPreview()"></textarea></div>
+                                        <div class="form-group" style="flex:1"><label class="form-label">Domains (one/line)</label><textarea class="form-input" id="inboxTestDomains" rows="2" placeholder="company.com" required oninput="updateInboxCombinationsPreview()"></textarea></div>
+                                    </div>
+                                    <span id="senderCombinationsPreview" class="form-hint">0 sender combinations</span>
+                                </div>
+                                <div class="section-box">
+                                    <h4 style="color:var(--green)">Recipients (TO)</h4>
+                                    <div class="form-row">
+                                        <div class="form-group" style="flex:1"><label class="form-label">Source</label><select class="form-input" id="inboxTestRecipientSource" onchange="toggleInboxRecipientInput()"><option value="manual">Manual Entry</option><option value="list">From Saved List</option></select></div>
+                                        <div class="form-group" style="flex:1;display:none" id="inboxRecipientListGroup"><label class="form-label">Select List</label><select class="form-input" id="inboxTestRecipientList" onchange="loadRecipientListEmails()"><option value="">-- Select --</option></select></div>
+                                    </div>
+                                    <div id="inboxManualRecipientsGroup"><div class="form-group"><label class="form-label">Emails (one/line)</label><textarea class="form-input" id="inboxTestRecipients" rows="2" placeholder="test@gmail.com&#10;test@outlook.com" oninput="updateInboxCombinationsPreview()"></textarea></div></div>
+                                    <div id="inboxListRecipientsGroup" style="display:none"><div class="form-group"><label class="form-label">Recipients from List</label><textarea class="form-input" id="inboxListRecipientsPreview" rows="2" readonly style="opacity:.7"></textarea></div></div>
+                                </div>
+                                <div class="flex-between">
+                                    <span id="combinationsPreview" class="form-hint">0 tests will be sent</span>
+                                    <button type="submit" class="btn btn-primary btn-sm"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Start Test</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: Test History -->
+                <div class="split-2col-main">
+                    <div class="card card-fill">
+                        <div class="card-hdr"><h3>Test History</h3></div>
+                        <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Status</th><th>Sent</th><th>Failed</th><th>Created</th><th>Actions</th></tr></thead><tbody id="inboxFinderTestsBody"><tr><td colspan="6" class="text-center text-muted">No tests yet</td></tr></tbody></table></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== UNSUBSCRIBES PAGE ===== -->
+        <div class="page" id="unsubscribesPage">
+            <div class="page-hdr">
+                <div><h1>Unsubscribes</h1><p>Recipients who have opted out — they will be skipped on every send</p></div>
+                <div class="page-hdr-actions">
+                    <button class="btn btn-secondary" onclick="exportUnsubscribesCsv()">Export CSV</button>
+                    <button class="btn btn-primary" onclick="showAddUnsubscribeModal()">+ Add Manually</button>
+                </div>
+            </div>
+            <div class="card card-fill">
+                <div class="card-hdr"><h3>Suppression list <span id="unsubscribesCount" class="badge badge-info" style="margin-left:8px">0</span></h3></div>
+                <div id="unsubscribesContainer" class="card-body" style="padding:0">
+                    <div class="text-center text-muted" style="padding:24px">Loading…</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ATTACHMENTS PAGE ===== -->
+        <div class="page" id="attachmentsPage">
+            <div class="page-hdr">
+                <div><h1>Attachment Library</h1><p>HTML templates to attach to your emails</p></div>
+                <div class="page-hdr-actions">
+                    <span id="viewToggle-attachments"></span>
+                    <button class="btn btn-primary" onclick="showAttachmentModal()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v16m8-8H4"/></svg> New Attachment</button>
+                </div>
+            </div>
+            <div id="attachmentsContainer" class="page-fill"><div class="text-center text-muted">Loading...</div></div>
+        </div>
+
+        <!-- ===== TEMPLATES PAGE ===== -->
+        <div class="page" id="templatesPage">
+            <div class="page-hdr">
+                <div><h1>Email Templates</h1><p>Save and reuse HTML templates for campaigns</p></div>
+                <div class="page-hdr-actions">
+                    <span id="viewToggle-templates"></span>
+                    <button class="btn btn-primary" onclick="showNewTemplateModal()">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v16m8-8H4"/></svg>
+                        New Template
+                    </button>
+                </div>
+            </div>
+            <div id="templatesContainer" class="page-fill"><div class="text-center text-muted">Loading...</div></div>
+        </div>
+
+        <!-- ===== PLACEHOLDERS PAGE ===== -->
+        <div class="page" id="placeholdersPage">
+            <div class="page-hdr"><div><h1>Placeholders Guide</h1><p>Use these in Content, Subjects, and HTML Attachments</p></div></div>
+            <div class="card-grid-fixed-2">
+                <div class="card">
+                    <div class="card-hdr"><h3>Recipient Info</h3></div>
+                    <div class="tbl-wrap">
+                        <table class="ph-table">
+                            <thead><tr><th>Placeholder</th><th>Description</th><th>Example</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>{RECIPIENT_NAME}</code></td><td>Full recipient name</td><td>John Doe</td></tr>
+                                <tr><td><code>{RECIPIENT_FIRST_NAME}</code></td><td>First name only</td><td>John</td></tr>
+                                <tr><td><code>{RECIPIENT_LAST_NAME}</code></td><td>Last name only</td><td>Doe</td></tr>
+                                <tr><td><code>{RECIPIENT_EMAIL}</code></td><td>Full email</td><td>john@co.com</td></tr>
+                                <tr><td><code>{RECIPIENT_DOMAIN}</code></td><td>Email domain</td><td>company.com</td></tr>
+                                <tr><td><code>{RECIPIENT_DOMAIN_NAME}</code></td><td>Domain capitalized</td><td>Company</td></tr>
+                                <tr><td><code>{RECIPIENT_BASE64_EMAIL}</code></td><td>Base64-encoded email</td><td>am9obkBjby4=</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hdr"><h3>Date &amp; Time</h3></div>
+                    <div class="tbl-wrap">
+                        <table class="ph-table">
+                            <thead><tr><th>Placeholder</th><th>Description</th><th>Example</th></tr></thead>
+                            <tbody>
+                                <tr><td colspan="3" class="ph-group">Base</td></tr>
+                                <tr><td><code>{CURRENT_DATE}</code></td><td>Today's date (locale)</td><td>4/10/2026</td></tr>
+                                <tr><td><code>{CURRENT_TIME}</code></td><td>Current time (locale)</td><td>3:42:18 PM</td></tr>
+                                <tr><td><code>{CURRENT_YEAR}</code></td><td>Current year</td><td>2026</td></tr>
+                                <tr><td><code>{CURRENT_WEEKDAY}</code></td><td>Day of the week</td><td>Friday</td></tr>
+
+                                <tr><td colspan="3" class="ph-group">Date formats</td></tr>
+                                <tr><td><code>{DATE_ISO}</code></td><td>ISO 8601 date</td><td>2026-04-10</td></tr>
+                                <tr><td><code>{DATE_LONG}</code></td><td>Full readable date</td><td>April 10, 2026</td></tr>
+                                <tr><td><code>{DATE_FULL}</code></td><td>With weekday</td><td>Friday, April 10, 2026</td></tr>
+                                <tr><td><code>{DATE_DMY}</code></td><td>European DD/MM/YYYY</td><td>10/04/2026</td></tr>
+                                <tr><td><code>{DATE_MDY}</code></td><td>US MM/DD/YYYY</td><td>04/10/2026</td></tr>
+
+                                <tr><td colspan="3" class="ph-group">Time formats</td></tr>
+                                <tr><td><code>{TIME_24H}</code></td><td>24-hour with seconds</td><td>15:42:18</td></tr>
+                                <tr><td><code>{TIME_HM_24}</code></td><td>24-hour no seconds</td><td>15:42</td></tr>
+                                <tr><td><code>{TIME_HM_12}</code></td><td>12-hour no seconds</td><td>3:42 PM</td></tr>
+                                <tr><td><code>{TIMESTAMP}</code></td><td>Unix timestamp (seconds)</td><td>1744300800</td></tr>
+                                <tr><td><code>{TIMESTAMP_MS}</code></td><td>Unix timestamp (milliseconds)</td><td>1744300800123</td></tr>
+
+                                <tr><td colspan="3" class="ph-group">Pieces</td></tr>
+                                <tr><td><code>{CURRENT_MONTH}</code></td><td>Month name</td><td>April</td></tr>
+                                <tr><td><code>{CURRENT_MONTH_SHORT}</code></td><td>Month name (short)</td><td>Apr</td></tr>
+                                <tr><td><code>{CURRENT_MONTH_NUM}</code></td><td>Month number (2-digit)</td><td>04</td></tr>
+                                <tr><td><code>{CURRENT_DAY}</code></td><td>Day of month (2-digit)</td><td>10</td></tr>
+                                <tr><td><code>{CURRENT_HOUR}</code></td><td>Hour (2-digit, 24h)</td><td>15</td></tr>
+                                <tr><td><code>{CURRENT_MINUTE}</code></td><td>Minute (2-digit)</td><td>42</td></tr>
+                                <tr><td><code>{TIMEZONE}</code></td><td>IANA timezone name</td><td>America/New_York</td></tr>
+                                <tr><td><code>{TIMEZONE_OFFSET}</code></td><td>UTC offset</td><td>-04:00</td></tr>
+
+                                <tr><td colspan="3" class="ph-group">Relative / expiry</td></tr>
+                                <tr><td><code>{TOMORROW_DATE}</code></td><td>Tomorrow's date</td><td>4/11/2026</td></tr>
+                                <tr><td><code>{YESTERDAY_DATE}</code></td><td>Yesterday's date</td><td>4/9/2026</td></tr>
+                                <tr><td><code>{EXPIRY_DATE_24H}</code></td><td>24 hours from now</td><td>4/11/2026, 3:42 PM</td></tr>
+                                <tr><td><code>{EXPIRY_DATE_48H}</code></td><td>48 hours from now</td><td>4/12/2026, 3:42 PM</td></tr>
+                                <tr><td><code>{EXPIRY_DATE_72H}</code></td><td>72 hours from now</td><td>4/13/2026, 3:42 PM</td></tr>
+                                <tr><td><code>{EXPIRY_DATE_7D}</code></td><td>7 days from now</td><td>4/17/2026</td></tr>
+                                <tr><td><code>{EXPIRY_DATE_30D}</code></td><td>30 days from now</td><td>5/10/2026</td></tr>
+
+                                <tr><td colspan="3" class="ph-group">Calendar</td></tr>
+                                <tr><td><code>{QUARTER}</code></td><td>Current quarter</td><td>Q2</td></tr>
+                                <tr><td><code>{WEEK_NUMBER}</code></td><td>ISO week number</td><td>15</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hdr"><h3>Random Values &amp; Links</h3></div>
+                    <div class="tbl-wrap">
+                        <table class="ph-table">
+                            <thead><tr><th>Placeholder</th><th>Description</th><th>Example</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>{RANDOM_NUMBER4}</code></td><td>4-digit code</td><td>0042</td></tr>
+                                <tr><td><code>{RANDOM_NUMBER6}</code></td><td>6-digit OTP / verification code</td><td>004821</td></tr>
+                                <tr><td><code>{RANDOM_NUMBER10}</code></td><td>10-digit random number</td><td>8472019384</td></tr>
+                                <tr><td><code>{RANDOM_STRING}</code></td><td>Random hex string (40 chars)</td><td>a3f9b2c1...</td></tr>
+                                <tr><td><code>{RANDOM_MD5}</code></td><td>Random MD5 hash</td><td>5d4140...</td></tr>
+                                <tr><td><code>{RANDOM_UUID}</code></td><td>UUID v4 (tracking ID)</td><td>f47ac10b-58cc-4372-...</td></tr>
+                                <tr><td><code>{RANDOM_PRICE}</code></td><td>Random price ($9.99 – $499.99)</td><td>$47.05</td></tr>
+                                <tr><td><code>{RANDOM_PATH}</code></td><td>Random URL path</td><td>/docs/abc123</td></tr>
+                                <tr><td><code>{LINK}</code> / <code>{CTA_LINK}</code></td><td>Link from rotation list</td><td>https://example.com/r/...</td></tr>
+                                <tr><td><code>{RANDLINK}</code></td><td>Random fake link</td><td>https://random.com/r/...</td></tr>
+                                <tr><td><code>{QR_CODE}</code></td><td>QR code (HTML table)</td><td>QR of {LINK}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hdr"><h3>Fake Data (Faker)</h3></div>
+                    <div class="tbl-wrap">
+                        <table class="ph-table">
+                            <thead><tr><th>Placeholder</th><th>Description</th><th>Example</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>{FAKE_FIRST_NAME}</code></td><td>Random first name</td><td>Sarah</td></tr>
+                                <tr><td><code>{FAKE_LAST_NAME}</code></td><td>Random last name</td><td>Williams</td></tr>
+                                <tr><td><code>{FAKE_FULL_NAME}</code></td><td>Random full name</td><td>Sarah Williams</td></tr>
+                                <tr><td><code>{FAKE_PHONE}</code></td><td>Random phone number</td><td>(555) 123-4567</td></tr>
+                                <tr><td><code>{FAKE_ADDRESS}</code></td><td>Random street address</td><td>123 Main St</td></tr>
+                                <tr><td><code>{FAKE_CITY}</code></td><td>Random city</td><td>Springfield</td></tr>
+                                <tr><td><code>{FAKE_JOB_TITLE}</code></td><td>Random job title</td><td>Senior Marketing Manager</td></tr>
+                                <tr><td><code>{FAKE_DEPARTMENT}</code></td><td>Random department</td><td>Customer Success</td></tr>
+                                <tr><td><code>{FAKE_COMPANY}</code></td><td>Random company name</td><td>Acme Inc</td></tr>
+                                <tr><td><code>{FAKE_COMPANY_EMAIL}</code></td><td>Random email</td><td>sarah@acme.com</td></tr>
+                                <tr><td><code>{FAKE_COMPANY_EMAIL_AND_FULLNAME}</code></td><td>Name + email combo</td><td>Sarah Williams &lt;sarah@acme.com&gt;</td></tr>
+                                <tr><td><code>{FAKE_INVOICE_NUMBER}</code></td><td>Invoice number</td><td>INV-2026-04829</td></tr>
+                                <tr><td><code>{FAKE_ORDER_NUMBER}</code></td><td>Order number</td><td>ORD-7384921</td></tr>
+                                <tr><td><code>{FAKE_TRACKING_NUMBER}</code></td><td>UPS-style tracking number</td><td>1Z999AA10123456784</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card card-grid-span-all">
+                    <div class="card-hdr"><h3>Usage Examples</h3></div>
+                    <div class="card-body usage-examples">
+                        <div class="usage-example"><span class="form-label">Subject Line:</span><div class="usage-example-code">Welcome {RECIPIENT_FIRST_NAME} — your code is {RANDOM_NUMBER6}</div></div>
+                        <div class="usage-example"><span class="form-label">Email Content:</span><div class="usage-example-code">Hi {RECIPIENT_FIRST_NAME}, your order {FAKE_ORDER_NUMBER} has shipped. Track it at {FAKE_TRACKING_NUMBER}. Offer expires {EXPIRY_DATE_24H}. © {CURRENT_YEAR}</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ACCOUNT PAGE ===== -->
+        <div class="page" id="accountPage">
+            <div class="page-hdr"><div><h1>Account</h1><p>Profile and application info</p></div></div>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-hdr"><h3>Profile</h3></div>
+                    <div class="card-body">
+                        <form id="accountForm" onsubmit="updateProfile(event)">
+                            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="accountEmail" disabled></div>
+                            <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="accountName" placeholder="Your name"></div>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hdr"><h3>Application</h3></div>
+                    <div class="card-body">
+                        <div class="form-group"><label class="form-label">Version</label><div class="form-input form-input-readonly" id="appVersionDisplay">-</div></div>
+                        <div class="form-group"><label class="form-label">Data Location</label><div class="form-input form-input-readonly form-input-mono">Local Application Data</div></div>
+                        <div class="btn-row">
+                            <button type="button" class="btn btn-secondary" onclick="manualUpdateCheck()">Check for Updates</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hdr"><h3>Backup &amp; Restore</h3></div>
+                    <div class="card-body">
+                        <p class="form-hint mb-md">Export all your campaigns, lists, SMTP configs, attachments, templates, and unsubscribes to a single JSON file. Restore on any machine with the same encryption key.</p>
+                        <div class="btn-row">
+                            <button type="button" class="btn btn-primary" onclick="exportBackup()">Export Backup</button>
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('importBackupFile').click()">Import Backup…</button>
+                            <input type="file" id="importBackupFile" accept="application/json,.json" style="display:none" onchange="handleImportBackup(event)">
+                        </div>
+                        <div class="form-group mt-md">
+                            <label class="form-label form-label-inline">
+                                <input type="checkbox" id="backupReplaceExisting"> Replace existing items with same name
+                            </label>
+                            <p class="form-hint">By default, items with names that already exist are skipped. Check this to overwrite them.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hdr"><h3>Appearance</h3></div>
+                    <div class="card-body">
+                        <p class="form-hint mb-md">Upload a background image to personalize the workspace. The image is stored locally on this machine and only visible to you.</p>
+
+                        <div class="bg-preview" id="bgPreview">
+                            <div class="bg-preview-empty">
+                                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <span>No background image</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Image file</label>
+                            <input type="file" id="bgImageInput" accept="image/*" class="form-input" onchange="handleBackgroundImageUpload(event)">
+                            <p class="form-hint">Max size: 3 MB. Supported: JPG, PNG, WEBP.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Dim overlay <span id="bgDimValue" class="form-hint" style="float:right">75%</span>
+                            </label>
+                            <input type="range" id="bgDimInput" min="0" max="95" step="5" value="75" oninput="handleBackgroundDimChange(event)" style="width:100%">
+                            <p class="form-hint">Darker overlay = better text readability. Lighter = more of the image shows through.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Blur <span id="bgBlurValue" class="form-hint" style="float:right">0px</span>
+                            </label>
+                            <input type="range" id="bgBlurInput" min="0" max="20" step="1" value="0" oninput="handleBackgroundBlurChange(event)" style="width:100%">
+                        </div>
+
+                        <div class="btn-row">
+                            <button type="button" class="btn btn-danger" onclick="clearBackgroundImage()">Remove Background</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hdr"><h3>License</h3></div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">License Key</label>
+                            <div class="form-input form-input-readonly form-input-mono" id="licenseKeyDisplay">-</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <div><span id="licenseStatusDisplay" class="badge badge-gray">Loading…</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Plan</label>
+                                <div class="form-input form-input-readonly" id="licensePlanDisplay">-</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Registered Email</label>
+                            <div class="form-input form-input-readonly" id="licenseEmailDisplay">-</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Expires</label>
+                                <div class="form-input form-input-readonly" id="licenseExpiresDisplay">-</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Valid For</label>
+                                <div class="form-input form-input-readonly" id="licenseValidForDisplay">-</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Machine ID</label>
+                            <div class="form-input form-input-readonly form-input-mono" id="licenseMachineIdDisplay">-</div>
+                        </div>
+                        <div class="btn-row">
+                            <button type="button" class="btn btn-secondary" onclick="loadLicenseInfo()">Refresh</button>
+                            <button type="button" class="btn btn-danger" onclick="handleDeactivateLicense()">Deactivate License</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RECIPIENTS PAGE ===== -->
+        <div class="page" id="recipientsPage">
+            <div class="page-hdr">
+                <div><h1>Recipient Lists</h1><p>Manage your mailing lists for campaigns</p></div>
+                <div class="page-hdr-actions">
+                    <span id="viewToggle-recipients"></span>
+                    <button class="btn btn-primary" onclick="showRecipientListModal()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v16m8-8H4"/></svg> New List</button>
+                </div>
+            </div>
+            <div id="recipientsContainer" class="page-fill"><div class="text-center text-muted">Loading...</div></div>
+        </div>
+
+        <!-- ===== SUBJECTS PAGE ===== -->
+        <div class="page" id="subjectsPage">
+            <div class="page-hdr">
+                <div><h1>Subject Line Lists</h1><p>Create subject line lists for A/B testing and rotation</p></div>
+                <div class="page-hdr-actions">
+                    <span id="viewToggle-subjects"></span>
+                    <button class="btn btn-primary" onclick="showListModal('subjects')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v16m8-8H4"/></svg> Add List</button>
+                </div>
+            </div>
+            <div id="subjectsContainer" class="page-fill"><div class="text-center text-muted">Loading...</div></div>
+        </div>
+
+        <!-- ===== SENDERS PAGE ===== -->
+        <div class="page" id="sendersPage">
+            <div class="page-hdr">
+                <div><h1>Sender Name Lists</h1><p>Create sender name lists for variation</p></div>
+                <div class="page-hdr-actions">
+                    <span id="viewToggle-senders"></span>
+                    <button class="btn btn-primary" onclick="showListModal('senders')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v16m8-8H4"/></svg> Add List</button>
+                </div>
+            </div>
+            <div id="sendersContainer" class="page-fill"><div class="text-center text-muted">Loading...</div></div>
+        </div>
+
+        <!-- ===== LINKS PAGE ===== -->
+        <div class="page" id="linksPage">
+            <div class="page-hdr">
+                <div><h1>Link Lists</h1><p>URL rotation lists for your campaigns</p></div>
+                <div class="page-hdr-actions">
+                    <span id="viewToggle-links"></span>
+                    <button class="btn btn-primary" onclick="showListModal('links')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v16m8-8H4"/></svg> Add List</button>
+                </div>
+            </div>
+            <div id="linksContainer" class="page-fill"><div class="text-center text-muted">Loading...</div></div>
+        </div>
+
+        <!-- ===== PROXIES PAGE ===== -->
+        <div class="page" id="proxiesPage">
+            <div class="page-hdr">
+                <div><h1>Proxy Servers</h1><p>Route connections through proxies for deliverability</p></div>
+                <div class="page-hdr-actions">
+                    <span id="viewToggle-proxies"></span>
+                    <button class="btn btn-primary" onclick="showProxyModal()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v16m8-8H4"/></svg> Add Proxy</button>
+                </div>
+            </div>
+            <div id="proxiesContainer" class="page-fill"><div class="text-center text-muted">Loading...</div></div>
+        </div>
+
+        <!-- ===== SENDING CONFIG PAGE ===== -->
+        <div class="page" id="sendingPage">
+            <div class="page-hdr"><div><h1>Sending Configuration</h1><p>Control email sending behavior</p></div></div>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-hdr"><h3>Sending Settings</h3></div>
+                    <div class="card-body">
+                        <form id="sendingSettingsForm">
+                            <div class="form-group"><label class="form-label">Threads (Parallel)</label><input type="number" class="form-input" id="settingsThreads" value="1" min="1" max="10"><p class="form-hint">Emails sent in parallel</p></div>
+                            <div class="form-group"><label class="form-label">Delay (ms)</label><input type="number" class="form-input" id="settingsDelay" value="1000" min="0"><p class="form-hint">Delay between sends / between threaded waves</p></div>
+                            <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="settingsRetryFailed"> Retry Failed Emails</label></div>
+                            <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="settingsUseProxy"> Use Proxy</label></div>
+                            <button type="button" class="btn btn-primary" onclick="saveSendingSettings()">Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hdr"><h3>Deliverability Testing</h3></div>
+                    <div class="card-body">
+                        <p class="form-hint mb-md">Automatically send test emails to your inbox during a campaign so you can monitor whether your messages are still landing in the inbox.</p>
+                        <form id="deliverabilityForm">
+                            <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="testEnabled"> Enable Deliverability Testing</label></div>
+                            <div class="form-group"><label class="form-label">Test Email Address</label><input type="email" class="form-input" id="testEmail" placeholder="you@yourdomain.com"><p class="form-hint">Where the test emails are delivered</p></div>
+                            <div class="form-group"><label class="form-label">Test Interval</label><input type="number" class="form-input" id="testInterval" value="50" min="10"><p class="form-hint">Send a test email every N successful sends</p></div>
+                            <div class="btn-row">
+                                <button type="button" class="btn btn-primary" onclick="saveDeliverabilitySettings()">Save</button>
+                                <button type="button" class="btn btn-secondary" onclick="sendManualTestEmail()">Send Test Now</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /workspace -->
+</div><!-- /app -->
+
+<!-- ====================================================================
+     MODALS
+     ==================================================================== -->
+
+<!-- Campaign Modal -->
+<div class="modal-overlay" id="campaignModal">
+    <div class="modal modal-xl">
+        <div class="modal-header"><h3 id="campaignModalTitle">New Campaign</h3><button class="modal-close" onclick="closeCampaignModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body" style="max-height:calc(90vh - 120px)">
+            <div id="draftRestoreBanner" class="draft-banner" style="display:none">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Unsaved draft from <span class="draft-time"></span></span>
+                <div class="btn-row">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="restoreDraftClick()">Restore</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="discardDraftClick()">Discard</button>
+                </div>
+            </div>
+            <form id="campaignForm">
+                <input type="hidden" id="campaignId">
+                <input type="hidden" id="contentType" value="html">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                    <!-- Left: Details -->
+                    <div>
+                        <h4 class="mb-sm" style="color:var(--text);font-size:13px">Campaign Details</h4>
+                        <input type="hidden" id="campaignName" value="">
+                        <div class="form-group"><label class="form-label">SMTP Server(s) *</label><select class="form-input" id="smtpIdsSelect" multiple style="min-height:80px" onchange="toggleSmtpRotationType()"></select><p class="form-hint">Hold Ctrl to select multiple</p></div>
+                        <div class="form-group" id="smtpRotationTypeGroup" style="display:none"><label class="form-label">SMTP Rotation Type</label><select class="form-input" id="smtpRotationType"><option value="round_robin">Round Robin (cycle per email)</option><option value="batch">Instantly (all SMTPs at once)</option></select><p class="form-hint">Round Robin: cycles SMTPs per send. Instantly: every wave uses all SMTPs simultaneously.</p></div>
+                        <div class="form-group"><label class="form-label">Subject Line</label><input type="text" class="form-input" id="campaignSubject" placeholder="Your subject line..."></div>
+                        <div class="form-group"><label class="form-label">Reply-To</label><input type="email" class="form-input" id="campaignReplyTo" placeholder="reply@company.com"></div>
+                        <div class="form-group">
+                            <label class="form-label">Recipients *</label>
+                            <div class="flex gap-sm mb-sm"><select class="form-input" id="recipientListSelect" onchange="loadRecipientList()" style="flex:1"><option value="">-- Select Saved List --</option></select><button type="button" class="btn btn-secondary btn-sm" onclick="showRecipientListModal()">+ New</button></div>
+                            <div class="recipients-dropzone" id="recipientsDropzone">
+                                <textarea class="form-input code-editor" id="campaignRecipients" rows="5" placeholder="email@example.com&#10;john@co.com,John Doe,Acme" required></textarea>
+                                <div class="dropzone-overlay"><span>Drop .csv or .txt file to import</span></div>
+                            </div>
+                            <p class="form-hint">Select a list, enter manually, or drag &amp; drop a <code>.csv</code> / <code>.txt</code> file. First row can be a header; email column auto-detected.</p>
+                        </div>
+                        <div class="section-box">
+                            <label class="form-label mb-sm">Attachment</label>
+                            <select class="form-input" id="attachmentSource" onchange="toggleAttachmentSource()"><option value="none">No Attachment</option><option value="library">From Library</option><option value="upload">Upload File</option></select>
+                            <div id="libraryAttachmentOptions" style="display:none;margin-top:10px"><div class="form-row"><div class="form-group" style="flex:2;margin-bottom:0"><select class="form-input" id="libraryAttachmentSelect"></select></div><div class="form-group" style="flex:1;margin-bottom:0"><select class="form-input" id="attachmentFormat"><option value="html">HTML</option><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="xlsx">Excel</option><option value="jpg">JPG Image</option><option value="png">PNG Image</option><option value="svg">SVG</option></select></div></div><div class="form-group" style="margin-top:8px;margin-bottom:0"><input type="text" class="form-input" id="attachmentCustomName" placeholder="Attachment filename (without extension)"><p class="form-hint">Leave empty for default name. Supports placeholders like {RECIPIENT_NAME}</p></div></div>
+                            <div id="uploadAttachmentOptions" style="display:none;margin-top:10px"><input type="file" class="form-input" id="campaignAttachment" onchange="handleAttachmentChange(this)"><div id="attachmentFileName" class="form-hint mt-sm"></div></div>
+                        </div>
+                    </div>
+                    <!-- Right: Content -->
+                    <div>
+                        <h4 class="mb-sm" style="color:var(--text);font-size:13px">Email Content</h4>
+                        <div class="form-group" style="margin-bottom:8px"><label class="form-label" style="font-size:11px">Load Template</label><div class="flex gap-sm"><select class="form-input" id="campaignTemplateSelect" onchange="loadTemplateToBody()" style="flex:1"><option value="">-- Select --</option></select><button type="button" class="btn btn-secondary btn-sm" onclick="refreshTemplatesList()">Refresh</button></div></div>
+                        <div class="flex gap-sm mb-sm" style="align-items:center">
+                            <button type="button" id="htmlToggle" class="btn btn-secondary btn-sm active" onclick="setContentType('html')">&lt;/&gt; HTML</button>
+                            <button type="button" id="textToggle" class="btn btn-secondary btn-sm" onclick="setContentType('text')">Text</button>
+                            <button type="button" id="previewBtn" class="btn btn-info btn-sm" onclick="previewEmail()" style="margin-left:auto">Preview</button>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0"><textarea class="form-input code-editor" id="campaignBody" rows="14" placeholder="<html>&#10;<body>&#10;  <h1>Hello {RECIPIENT_NAME}</h1>&#10;</body>&#10;</html>" required></textarea></div>
+                        <details style="margin-top:10px">
+                            <summary style="cursor:pointer;font-weight:600;color:var(--text-3);font-size:12px">Advanced: Content Rotation</summary>
+                            <div class="section-box mt-sm" style="margin-bottom:0">
+                                <div class="form-row" style="margin-bottom:0">
+                                    <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">Subject Lines</label><select class="form-input" id="subjectListSelect"><option value="">Use single subject</option></select></div>
+                                    <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">Sender Names</label><select class="form-input" id="senderListSelect"><option value="">SMTP default</option></select></div>
+                                    <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">CTA Links</label><select class="form-input" id="linkListSelect"><option value="">No rotation</option></select></div>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer" style="background:var(--bg-3)">
+            <button class="btn btn-secondary" onclick="closeCampaignModal()">Cancel</button>
+            <button class="btn btn-info" onclick="showCampaignPreview()">Preview</button>
+            <button class="btn btn-success" onclick="saveCampaign()">Save Draft</button>
+            <button class="btn btn-primary" onclick="saveCampaign(true)" style="font-weight:700">Save &amp; Send</button>
+        </div>
+    </div>
+</div>
+
+<!-- Campaign Preview Modal -->
+<div class="modal-overlay" id="previewModal">
+    <div class="modal modal-xl">
+        <div class="modal-header">
+            <h3>Email Preview <span id="previewSpamBadge" class="badge" style="margin-left:10px"></span></h3>
+            <button class="modal-close" onclick="closePreviewModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <div class="modal-body" style="padding:0;display:flex;flex-direction:column;height:75vh">
+            <div style="padding:14px 18px;background:rgba(0,0,0,.12);border-bottom:1px solid var(--border)">
+                <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Subject</div>
+                <div id="previewSubject" style="font-weight:600;font-size:15px;color:var(--text)"></div>
+            </div>
+            <iframe id="previewIframe" style="flex:1;width:100%;border:none;background:#fff"></iframe>
+            <div id="previewSpamReport" style="padding:14px 18px;background:rgba(0,0,0,.12);border-top:1px solid var(--border);max-height:160px;overflow-y:auto">
+                <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Spam Score Report</div>
+                <div id="previewSpamReportContent" style="font-size:12px;color:var(--text-2);line-height:1.6"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closePreviewModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- SMTP Modal -->
+<div class="modal-overlay" id="smtpModal">
+    <div class="modal">
+        <div class="modal-header"><h3 id="smtpModalTitle">Add Email Server</h3><button class="modal-close" onclick="closeSmtpModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body">
+            <form id="smtpForm">
+                <input type="hidden" id="smtpId">
+                <div class="form-row"><div class="form-group" style="flex:1"><label class="form-label">Provider *</label><select class="form-input" id="smtpProvider" onchange="toggleSmtpProvider()"><option value="smtp">SMTP (Generic)</option><option value="sendgrid">SendGrid</option><option value="mailgun">Mailgun</option><option value="amazon_ses">Amazon SES</option><option value="postmark">Postmark</option><option value="sparkpost">SparkPost</option><option value="gsuite">Google Workspace / Gmail</option></select></div><div class="form-group" style="flex:1"><label class="form-label">Name *</label><input type="text" class="form-input" id="smtpName" placeholder="e.g., Primary SMTP" required></div></div>
+                <!-- API Key field (for API providers) -->
+                <div class="form-group" id="smtpApiKeyGroup" style="display:none"><label class="form-label">API Key *</label><input type="password" class="form-input" id="smtpApiKey" placeholder="Enter your API key"></div>
+                <!-- Mailgun domain -->
+                <div class="form-row" id="smtpApiDomainGroup" style="display:none"><div class="form-group" style="flex:2"><label class="form-label">Sending Domain *</label><input type="text" class="form-input" id="smtpApiDomain" placeholder="mg.yourdomain.com"></div><div class="form-group" style="flex:1"><label class="form-label">Region</label><select class="form-input" id="smtpApiRegion"><option value="us">US</option><option value="eu">EU</option></select></div></div>
+                <!-- Region only (for SES, SparkPost) -->
+                <div class="form-group" id="smtpApiRegionOnlyGroup" style="display:none"><label class="form-label" id="smtpApiRegionOnlyLabel">Region</label><select class="form-input" id="smtpApiRegionOnly"><option value="us-east-1">US East (N. Virginia)</option><option value="us-west-2">US West (Oregon)</option><option value="eu-west-1">EU (Ireland)</option><option value="eu-central-1">EU (Frankfurt)</option><option value="ap-south-1">Asia Pacific (Mumbai)</option><option value="ap-southeast-2">Asia Pacific (Sydney)</option></select></div>
+                <!-- SMTP host/port (for generic SMTP) -->
+                <div id="smtpHostGroup">
+                    <div class="form-row"><div class="form-group" style="flex:2"><label class="form-label">Host *</label><input type="text" class="form-input" id="smtpHost" placeholder="smtp.example.com" required></div><div class="form-group" style="flex:1"><label class="form-label">Port *</label><input type="number" class="form-input" id="smtpPort" value="587" required></div></div>
+                </div>
+                <!-- Auth type / encryption (for SMTP mode) -->
+                <div id="smtpAuthRow">
+                    <div class="form-row"><div class="form-group" style="flex:1"><label class="form-label">Auth Type</label><select class="form-input" id="smtpAuthType" onchange="toggleSmtpAuth()"><option value="login">Username & Password</option><option value="none">None (IP Authenticated)</option><option value="api-key">API Key</option><option value="oauth2">OAuth2</option></select></div><div class="form-group" style="flex:1"><label class="form-label">Encryption</label><select class="form-input" id="smtpSecure"><option value="starttls">STARTTLS (Port 587)</option><option value="ssl">SSL/TLS (Port 465)</option><option value="none">None (Port 25)</option></select></div></div>
+                </div>
+                <div id="smtpAuthFields">
+                    <div class="form-row"><div class="form-group"><label class="form-label" id="smtpUsernameLabel">Username</label><input type="text" class="form-input" id="smtpUsername" placeholder="username"></div><div class="form-group"><label class="form-label" id="smtpPasswordLabel">Password</label><input type="password" class="form-input" id="smtpPassword" placeholder="••••••••"></div></div>
+                </div>
+                <div class="form-row"><div class="form-group"><label class="form-label">From Email</label><input type="email" class="form-input" id="smtpFromEmail" placeholder="noreply@example.com"></div><div class="form-group"><label class="form-label">From Name</label><input type="text" class="form-input" id="smtpFromName" placeholder="Your Company"></div></div>
+            </form>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary" onclick="closeSmtpModal()">Cancel</button><button class="btn btn-info" onclick="testSmtp()">Test</button><button class="btn btn-primary" onclick="saveSmtp()">Save</button></div>
+    </div>
+</div>
+
+<!-- (Legacy sendModal removed — replaced by running strip + #monitorPage for concurrent campaigns) -->
+
+<!-- Progress Modal -->
+<div class="modal-overlay" id="progressModal">
+    <div class="modal">
+        <div class="modal-header"><h3>Campaign Progress</h3><button class="modal-close" onclick="closeProgressModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body" style="text-align:center;padding:24px">
+            <div class="stat-value" id="progressPercent">0%</div>
+            <div class="progress mt-sm mb-sm"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+            <div class="text-muted" id="progressStatus">Starting...</div>
+            <div class="flex mt-md" style="justify-content:center;gap:32px">
+                <div><div class="stat-value text-success" id="progressSent">0</div><div class="text-muted">Sent</div></div>
+                <div><div class="stat-value text-danger" id="progressFailed">0</div><div class="text-muted">Failed</div></div>
+                <div><div class="stat-value" id="progressRemaining">0</div><div class="text-muted">Remaining</div></div>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-danger" id="stopCampaignBtn" onclick="stopCampaign()">Stop</button><button class="btn btn-secondary" onclick="closeProgressModal()">Close</button></div>
+    </div>
+</div>
+
+<!-- Attachment Library Modal -->
+<div class="modal-overlay" id="attachmentLibraryModal">
+    <div class="modal modal-lg">
+        <div class="modal-header"><h3 id="attachmentModalTitle">New Attachment</h3><button class="modal-close" onclick="closeAttachmentModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body">
+            <form id="attachmentLibraryForm">
+                <input type="hidden" id="editAttachmentId">
+                <div class="form-row"><div class="form-group" style="flex:1"><label class="form-label">Name *</label><input type="text" class="form-input" id="attachmentName" placeholder="e.g., Welcome Template" required></div><div class="form-group" style="flex:1"><label class="form-label">Tags</label><input type="text" class="form-input" id="attachmentTags" placeholder="welcome, onboarding"></div></div>
+                <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="attachmentDescription" rows="2" placeholder="Optional description..."></textarea></div>
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select class="form-input" id="attachmentType" onchange="toggleAttachmentType()">
+                        <option value="html">HTML Content</option>
+                        <option value="file">Upload File</option>
+                    </select>
+                </div>
+                <div id="attachmentHtmlGroup">
+                    <div class="form-group"><label class="form-label">HTML Content *</label><textarea class="form-input code-editor" id="attachmentHtmlContent" rows="10" placeholder="<html>Your HTML content...</html>"></textarea></div>
+                </div>
+                <div id="attachmentFileGroup" style="display:none">
+                    <div class="form-group">
+                        <label class="form-label">Upload File *</label>
+                        <input type="file" class="form-input" id="attachmentFileInput" onchange="handleLibraryFileChange(this)">
+                        <p class="form-hint">Supports: DOCX, XLSX, PDF, JPG, PNG, SVG, HTML, and more (max 10MB)</p>
+                    </div>
+                    <div id="attachmentFileInfo" class="form-hint" style="margin-top:4px"></div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary" onclick="closeAttachmentModal()">Cancel</button><button class="btn btn-info" id="previewAttachmentBtn" onclick="previewAttachment()">Preview</button><button class="btn btn-primary" onclick="saveLibraryAttachment()">Save</button></div>
+    </div>
+</div>
+
+<!-- Attachment Preview Modal -->
+<div class="modal-overlay" id="attachmentPreviewModal">
+    <div class="modal modal-lg">
+        <div class="modal-header"><h3>Attachment Preview</h3><button class="modal-close" onclick="closeAttachmentPreviewModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body"><iframe id="attachmentPreviewFrame" style="width:100%;height:380px;border:1px solid var(--border);border-radius:var(--radius);background:#fff"></iframe></div>
+        <div class="modal-footer"><button class="btn btn-secondary" onclick="closeAttachmentPreviewModal()">Close</button></div>
+    </div>
+</div>
+
+<!-- Email Preview Modal -->
+<div class="modal-overlay" id="previewModal">
+    <div class="modal" style="width:920px">
+        <div class="modal-header">
+            <h3>Email Preview</h3>
+            <div class="flex gap-sm"><button class="btn btn-secondary btn-sm" onclick="togglePreviewMode('desktop')" id="previewDesktopBtn">Desktop</button><button class="btn btn-secondary btn-sm" onclick="togglePreviewMode('mobile')" id="previewMobileBtn">Mobile</button></div>
+            <button class="modal-close" onclick="closePreviewModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <div class="modal-body" style="padding:20px;background:#e0e0e0;display:flex;justify-content:center">
+            <div id="previewContainer" style="width:100%;max-width:700px;transition:all .3s"><iframe id="previewFrame" style="width:100%;height:460px;border:none;border-radius:var(--radius);background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15)"></iframe></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary" onclick="closePreviewModal()">Close</button></div>
+    </div>
+</div>
+
+<!-- Recipient List Modal -->
+<!-- Email Template Modal -->
+<div class="modal-overlay" id="templateModal">
+    <div class="modal modal-lg">
+        <div class="modal-header"><h3 id="templateModalTitle">New Template</h3><button class="modal-close" onclick="closeTemplateModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body">
+            <input type="hidden" id="templateId">
+            <div class="form-row">
+                <div class="form-group" style="flex:2"><label class="form-label">Name *</label><input type="text" class="form-input" id="templateName" placeholder="e.g., Welcome Email" required></div>
+                <div class="form-group" style="flex:1"><label class="form-label">Tags</label><input type="text" class="form-input" id="templateTags" placeholder="welcome, onboarding"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Description</label><input type="text" class="form-input" id="templateDescription" placeholder="Optional short description"></div>
+            <div class="form-group"><label class="form-label">HTML Content *</label><textarea class="form-input code-editor" id="templateHtmlContent" rows="14" placeholder="<html><body>...</body></html>" required></textarea><p class="form-hint">Supports all the standard placeholders like {RECIPIENT_FIRST_NAME}, {LINK}, etc.</p></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeTemplateModal()">Cancel</button>
+            <button type="button" class="btn btn-info" onclick="previewTemplateHtml()">Preview</button>
+            <button type="button" class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+        </div>
+    </div>
+</div>
+
+<!-- Clean Recipient List Modal -->
+<div class="modal-overlay" id="cleanListModal">
+    <div class="modal" style="width:480px">
+        <div class="modal-header"><h3>Clean Recipient List</h3><button class="modal-close" onclick="closeCleanListModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body">
+            <p class="form-hint mb-md">Filter <strong id="cleanListName"></strong> by removing unwanted addresses. The list is updated in place — recipients that pass all checks remain.</p>
+            <input type="hidden" id="cleanListId">
+            <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="cleanRemoveInvalid" checked> Invalid email syntax</label></div>
+            <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="cleanRemoveDuplicates" checked> Duplicates (case-insensitive)</label></div>
+            <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="cleanRemoveUnsubscribes" checked> Unsubscribed addresses</label></div>
+            <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="cleanRemoveFailed"> Repeatedly-failing addresses</label></div>
+            <div class="form-group" id="cleanFailedThresholdGroup">
+                <label class="form-label">Failure threshold</label>
+                <input type="number" class="form-input" id="cleanFailedThreshold" value="2" min="1" max="20">
+                <p class="form-hint">Remove addresses that have failed at least this many times in your email logs.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeCleanListModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="submitCleanList()">Clean List</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Unsubscribe Modal -->
+<div class="modal-overlay" id="addUnsubscribeModal">
+    <div class="modal" style="width:440px">
+        <div class="modal-header"><h3>Add to Unsubscribe List</h3><button class="modal-close" onclick="closeAddUnsubscribeModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body">
+            <p class="form-hint mb-md">Manually suppress an email address. Future campaigns will skip this recipient automatically.</p>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-input" id="addUnsubscribeEmail" placeholder="user@example.com" autofocus>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAddUnsubscribeModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="submitAddUnsubscribe()">Add</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="recipientListModal">
+    <div class="modal modal-lg">
+        <div class="modal-header"><h3 id="recipientListModalTitle">New Recipient List</h3><button class="modal-close" onclick="closeRecipientListModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body">
+            <form id="recipientListForm">
+                <input type="hidden" id="recipientListId">
+                <div class="form-row"><div class="form-group" style="flex:2"><label class="form-label">List Name *</label><input type="text" class="form-input" id="recipientListName" placeholder="e.g., Newsletter Q1" required></div><div class="form-group" style="flex:1"><label class="form-label">Description</label><input type="text" class="form-input" id="recipientListDescription" placeholder="Optional"></div></div>
+                <div class="form-group"><label class="form-label">Recipients (one per line or CSV) *</label><textarea class="form-input code-editor" id="recipientListItems" rows="10" placeholder="email@example.com&#10;john@co.com,John Doe,Acme&#10;&#10;Or CSV with headers:&#10;email,name,company" required></textarea><p class="form-hint">Supports plain emails or CSV with custom columns for placeholders</p></div>
+                <div class="section-box mt-sm" id="recipientListPreview"><strong>Preview:</strong> <span id="recipientListCount">0</span> recipients detected</div>
+            </form>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary" onclick="closeRecipientListModal()">Cancel</button><button class="btn btn-primary" onclick="saveRecipientList()">Save List</button></div>
+    </div>
+</div>
+
+<!-- Generic List Modal -->
+<div class="modal-overlay" id="listModal">
+    <div class="modal modal-lg">
+        <div class="modal-header"><h3 id="listModalTitle">New List</h3><button class="modal-close" onclick="closeListModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body">
+            <form id="listForm">
+                <input type="hidden" id="listType"><input type="hidden" id="listId">
+                <div class="form-group"><label class="form-label">List Name *</label><input type="text" class="form-input" id="listName" placeholder="e.g., Welcome Subjects" required></div>
+                <div class="form-group"><label class="form-label" id="listItemsLabel">Items (one per line) *</label><textarea class="form-input" id="listItems" rows="10" placeholder="Item 1&#10;Item 2&#10;Item 3..." required></textarea><p class="form-hint">Enter each item on a new line</p></div>
+            </form>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary" onclick="closeListModal()">Cancel</button><button class="btn btn-primary" onclick="saveList()">Save</button></div>
+    </div>
+</div>
+
+<!-- Proxy Modal -->
+<div class="modal-overlay" id="proxyModal">
+    <div class="modal">
+        <div class="modal-header"><h3 id="proxyModalTitle">Add Proxy</h3><button class="modal-close" onclick="closeProxyModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body">
+            <form id="proxyForm">
+                <input type="hidden" id="proxyId">
+                <div class="form-group"><label class="form-label">Name *</label><input type="text" class="form-input" id="proxyName" placeholder="e.g., US Proxy 1" required></div>
+                <div class="form-row"><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="proxyType"><option value="http">HTTP</option><option value="https">HTTPS</option><option value="socks5">SOCKS5</option></select></div><div class="form-group" style="flex:2"><label class="form-label">Host *</label><input type="text" class="form-input" id="proxyHost" placeholder="proxy.example.com" required></div><div class="form-group" style="flex:1"><label class="form-label">Port *</label><input type="number" class="form-input" id="proxyPort" placeholder="8080" required></div></div>
+                <div class="form-row"><div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="proxyUsername" placeholder="Optional"></div><div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="proxyPassword" placeholder="Optional"></div></div>
+            </form>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary" onclick="closeProxyModal()">Cancel</button><button class="btn btn-primary" onclick="saveProxy()">Save</button></div>
+    </div>
+</div>
+
+<!-- Inbox Finder Results Modal -->
+<div class="modal-overlay" id="inboxFinderResultsModal">
+    <div class="modal modal-lg">
+        <div class="modal-header"><h3>Test Results</h3><button class="modal-close" onclick="closeInboxFinderResultsModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-body">
+            <div id="inboxFinderResultsSummary" class="mb-md"></div>
+            <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Status</th><th>Response</th></tr></thead><tbody id="inboxFinderResultsBody"></tbody></table></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary" onclick="closeInboxFinderResultsModal()">Close</button></div>
+    </div>
+</div>
+
+<!-- ====== SCRIPTS ====== -->
+<script src="/js/app.js"></script>
+<script src="/js/user.js"></script>
+<script>
+// electronAPI is provided by Electron's preload script via contextBridge.
+// When running in a browser (dev mode), it won't exist — onclick handlers use ?. optional chaining.
+
+// ===== SMTP Provider Toggle =====
+function toggleSmtpProvider() {
+    const provider = document.getElementById('smtpProvider').value;
+    const isApiProvider = ['sendgrid', 'postmark', 'sparkpost'].includes(provider);
+    const isMailgun = provider === 'mailgun';
+    const isSes = provider === 'amazon_ses';
+    const isGsuite = provider === 'gsuite';
+    const isSmtp = provider === 'smtp';
+
+    // API Key field — shown for API providers + Mailgun
+    document.getElementById('smtpApiKeyGroup').style.display = (isApiProvider || isMailgun) ? '' : 'none';
+
+    // Mailgun domain + region
+    document.getElementById('smtpApiDomainGroup').style.display = isMailgun ? '' : 'none';
+
+    // Region-only (SES regions)
+    const regionOnlyGroup = document.getElementById('smtpApiRegionOnlyGroup');
+    const regionOnlySelect = document.getElementById('smtpApiRegionOnly');
+    if (isSes) {
+        regionOnlyGroup.style.display = '';
+        document.getElementById('smtpApiRegionOnlyLabel').textContent = 'AWS Region';
+        // Reset to AWS region options
+        regionOnlySelect.innerHTML = '<option value="us-east-1">US East (N. Virginia)</option><option value="us-west-2">US West (Oregon)</option><option value="eu-west-1">EU (Ireland)</option><option value="eu-central-1">EU (Frankfurt)</option><option value="ap-south-1">Asia Pacific (Mumbai)</option><option value="ap-southeast-2">Asia Pacific (Sydney)</option>';
+    } else if (provider === 'sparkpost') {
+        regionOnlyGroup.style.display = '';
+        document.getElementById('smtpApiRegionOnlyLabel').textContent = 'Region';
+        regionOnlySelect.innerHTML = '<option value="us">US</option><option value="eu">EU</option>';
+    } else {
+        regionOnlyGroup.style.display = 'none';
+    }
+
+    // SMTP host/port — only for generic SMTP
+    document.getElementById('smtpHostGroup').style.display = isSmtp ? '' : 'none';
+
+    // Auth type / encryption row — only for generic SMTP
+    document.getElementById('smtpAuthRow').style.display = isSmtp ? '' : 'none';
+
+    // Username/password fields — for SMTP, GSuite, SES
+    const showCreds = isSmtp || isGsuite || isSes;
+    document.getElementById('smtpAuthFields').style.display = showCreds ? '' : 'none';
+
+    // Auto-fill labels for GSuite
+    if (isGsuite) {
+        document.getElementById('smtpUsernameLabel').textContent = 'Gmail / Workspace Email';
+        document.getElementById('smtpPasswordLabel').textContent = 'App Password';
+        document.getElementById('smtpUsername').placeholder = 'you@gmail.com';
+        document.getElementById('smtpPassword').placeholder = 'App password from Google';
+    } else if (isSes) {
+        document.getElementById('smtpUsernameLabel').textContent = 'SMTP Username (Access Key ID)';
+        document.getElementById('smtpPasswordLabel').textContent = 'SMTP Password (Secret Key)';
+        document.getElementById('smtpUsername').placeholder = 'AKIA...';
+        document.getElementById('smtpPassword').placeholder = 'Secret access key';
+    } else if (isSmtp) {
+        toggleSmtpAuth(); // Reset labels for generic SMTP auth type
+    }
+
+    // Update modal title
+    const titles = { smtp: 'SMTP Server', sendgrid: 'SendGrid', mailgun: 'Mailgun', amazon_ses: 'Amazon SES', postmark: 'Postmark', sparkpost: 'SparkPost', gsuite: 'Google Workspace / Gmail' };
+    const isEdit = document.getElementById('smtpId').value;
+    document.getElementById('smtpModalTitle').textContent = (isEdit ? 'Edit ' : 'Add ') + (titles[provider] || 'Email Server');
+}
+
+// ===== SMTP Auth Type Toggle =====
+function toggleSmtpAuth() {
+    const authType = document.getElementById('smtpAuthType').value;
+    const authFields = document.getElementById('smtpAuthFields');
+    const usernameLabel = document.getElementById('smtpUsernameLabel');
+    const passwordLabel = document.getElementById('smtpPasswordLabel');
+    const usernameInput = document.getElementById('smtpUsername');
+    const passwordInput = document.getElementById('smtpPassword');
+
+    if (authType === 'none') {
+        authFields.style.display = 'none';
+    } else {
+        authFields.style.display = '';
+        if (authType === 'api-key') {
+            usernameLabel.textContent = 'API Key Name';
+            passwordLabel.textContent = 'API Key';
+            usernameInput.placeholder = 'e.g., apikey';
+            passwordInput.placeholder = 'your-api-key';
+        } else if (authType === 'oauth2') {
+            usernameLabel.textContent = 'Client ID';
+            passwordLabel.textContent = 'Access Token';
+            usernameInput.placeholder = 'OAuth2 Client ID';
+            passwordInput.placeholder = 'OAuth2 Access Token';
+        } else {
+            usernameLabel.textContent = 'Username';
+            passwordLabel.textContent = 'Password';
+            usernameInput.placeholder = 'username';
+            passwordInput.placeholder = '••••••••';
+        }
+    }
+}
+
+// ===== Navigation =====
+function switchTab(name) {
+    // Unified layout — only one "home" panel exists now. Keep the function
+    // around so any legacy callers still highlight the right tab.
+    document.querySelectorAll('.ribbon-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ribbon-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector('.ribbon-tab')?.classList.add('active');
+    document.getElementById('panel-home')?.classList.add('active');
+}
+
+function go(pageId) {
+    // Hide all pages
+    document.querySelectorAll('.workspace .page').forEach(p => p.classList.remove('active'));
+
+    // Special route: monitor:<campaignId>
+    if (typeof pageId === 'string' && pageId.startsWith('monitor:')) {
+        const id = Number(pageId.substring(8));
+        const target = document.getElementById('monitorPage');
+        if (target) target.classList.add('active');
+        window.currentlyViewedMonitorId = id;
+        // Clear ribbon highlight — this isn't a ribbon destination
+        document.querySelectorAll('.rbtn').forEach(b => b.classList.remove('active'));
+        if (typeof renderMonitorPage === 'function') renderMonitorPage(id);
+        if (typeof renderRunningStrip === 'function') renderRunningStrip();
+        return;
+    }
+
+    // Leaving the monitor page? Unsubscribe any active monitor listener
+    const monitorContent = document.getElementById('monitorPageContent');
+    if (monitorContent && monitorContent._unsubscribe) {
+        try { monitorContent._unsubscribe(); } catch {}
+        monitorContent._unsubscribe = null;
+    }
+    window.currentlyViewedMonitorId = null;
+    if (typeof renderRunningStrip === 'function') renderRunningStrip();
+
+    // Show target
+    const target = document.getElementById(pageId + 'Page');
+    if (target) target.classList.add('active');
+
+    // Update ribbon button highlights
+    document.querySelectorAll('.rbtn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('rb-' + pageId.toLowerCase());
+    if (btn) btn.classList.add('active');
+
+    // Load data via user.js showPage
+    if (typeof showPage === 'function') showPage(pageId);
+}
+
+// ===== Init =====
+// --- License activation ---
+function showLicenseScreen() {
+    document.getElementById('licenseScreen').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+}
+
+function showMainApp() {
+    document.getElementById('licenseScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = '';
+}
+
+/**
+ * Render a value into a form-input-readonly display, or "-" if empty.
+ */
+function setLicenseField(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value || '-';
+}
+
+/**
+ * Format an ISO date (or null) as a locale string.
+ */
+function formatLicenseDate(value) {
+    if (!value) return null;
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value; // already non-ISO, show raw
+    return d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+/**
+ * Compute a human "Valid for X" string from an expiry date.
+ */
+function formatValidFor(expiresAt) {
+    if (!expiresAt) return null;
+    const now = Date.now();
+    const end = new Date(expiresAt).getTime();
+    if (isNaN(end)) return null;
+    const diff = end - now;
+    if (diff <= 0) return 'Expired';
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    if (days >= 365) {
+        const years = Math.floor(days / 365);
+        const remDays = days % 365;
+        return remDays > 0 ? `${years}y ${remDays}d` : `${years} year${years > 1 ? 's' : ''}`;
+    }
+    if (days >= 30) {
+        const months = Math.floor(days / 30);
+        const remDays = days % 30;
+        return remDays > 0 ? `${months}mo ${remDays}d` : `${months} month${months > 1 ? 's' : ''}`;
+    }
+    if (days > 0) {
+        return hours > 0 ? `${days}d ${hours}h` : `${days} day${days > 1 ? 's' : ''}`;
+    }
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
+    const minutes = Math.floor(diff / (1000 * 60));
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+}
+
+/**
+ * Update the status badge — green / yellow / red based on license state.
+ */
+function setLicenseStatusBadge(state, text) {
+    const el = document.getElementById('licenseStatusDisplay');
+    if (!el) return;
+    el.className = 'badge badge-' + ({
+        active: 'green',
+        offline: 'yellow',
+        expired: 'red',
+        inactive: 'gray'
+    }[state] || 'gray');
+    el.textContent = text || state;
+}
+
+/**
+ * Load license info: first render cached key from local file, then call
+ * the server to get fresh plan / email / expiry data. Falls back gracefully
+ * if the server is unreachable.
+ */
+async function loadLicenseInfo() {
+    if (!window.electronAPI?.getLicenseInfo) return;
+
+    // 1. Render cached local info immediately so the UI isn't blank
+    try {
+        const info = await electronAPI.getLicenseInfo();
+        if (info && info.license_key) {
+            const k = info.license_key;
+            setLicenseField('licenseKeyDisplay', k.length > 8 ? k.substring(0, 4) + '••••••••' + k.substring(k.length - 4) : k);
+        }
+        if (info && info.machine_id) {
+            // Shorten the hash so it fits
+            const m = info.machine_id;
+            setLicenseField('licenseMachineIdDisplay', m.length > 16 ? m.substring(0, 8) + '…' + m.substring(m.length - 8) : m);
+        }
+    } catch {}
+
+    // 2. Fetch fresh data from the license server via IPC
+    if (!window.electronAPI?.validateLicense) return;
+    try {
+        const result = await electronAPI.validateLicense();
+
+        if (!result.valid) {
+            setLicenseStatusBadge('inactive', 'Inactive');
+            return;
+        }
+
+        if (result.offline) {
+            setLicenseStatusBadge('offline', 'Offline (cached)');
+            return;
+        }
+
+        // result.data is whatever the server returned. We render any known fields.
+        const data = result.data || {};
+        setLicenseStatusBadge('active', 'Active');
+
+        // Plan — try common field names
+        const plan = data.plan || data.plan_name || data.tier || data.license_type || data.product;
+        setLicenseField('licensePlanDisplay', plan || '-');
+
+        // Email — try common field names
+        const email = data.email || data.customer_email || data.user_email || data.owner_email;
+        setLicenseField('licenseEmailDisplay', email || '-');
+
+        // Expiry
+        const expiresRaw = data.expires_at || data.expiry || data.expires || data.expire_at || data.valid_until;
+        if (expiresRaw) {
+            setLicenseField('licenseExpiresDisplay', formatLicenseDate(expiresRaw));
+            const validFor = formatValidFor(expiresRaw);
+            setLicenseField('licenseValidForDisplay', validFor);
+            if (validFor === 'Expired') {
+                setLicenseStatusBadge('expired', 'Expired');
+            }
+        } else if (data.lifetime || data.is_lifetime) {
+            setLicenseField('licenseExpiresDisplay', 'Never');
+            setLicenseField('licenseValidForDisplay', 'Lifetime');
+        }
+    } catch (err) {
+        console.error('[License] Failed to fetch license info:', err);
+        setLicenseStatusBadge('offline', 'Offline');
+    }
+}
+
+async function handleDeactivateLicense() {
+    if (!confirm('Deactivate your license? The app will close and require reactivation.')) return;
+    try {
+        await electronAPI.deactivateLicense();
+        showLicenseScreen();
+    } catch {}
+}
+
+async function handleActivateLicense() {
+    const keyInput = document.getElementById('licenseKeyInput');
+    const errorEl = document.getElementById('licenseError');
+    const successEl = document.getElementById('licenseSuccess');
+    const btn = document.getElementById('licenseActivateBtn');
+    const key = keyInput.value.trim();
+
+    errorEl.style.display = 'none';
+    successEl.style.display = 'none';
+
+    if (!key) {
+        errorEl.textContent = 'Please enter a license key';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Activating...';
+
+    try {
+        const result = await electronAPI.activateLicense(key);
+        if (result.success) {
+            successEl.textContent = 'License activated successfully!';
+            successEl.style.display = 'block';
+            setTimeout(() => showMainApp(), 800);
+        } else {
+            errorEl.textContent = result.error || 'Activation failed';
+            errorEl.style.display = 'block';
+        }
+    } catch (err) {
+        errorEl.textContent = 'Connection error. Check your internet.';
+        errorEl.style.display = 'block';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Activate License';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Check license before showing app
+    if (window.electronAPI && window.electronAPI.onLicenseStatus) {
+        window.electronAPI.onLicenseStatus(function(status) {
+            if (status.valid) {
+                showMainApp();
+                if (typeof initApp === 'function') initApp();
+                go('campaigns');
+                loadLicenseInfo();
+            } else {
+                showLicenseScreen();
+            }
+        });
+    }
+
+    // Fallback: validate directly if status event doesn't fire in 3s
+    setTimeout(async function() {
+        const mainApp = document.getElementById('mainApp');
+        const licenseScreen = document.getElementById('licenseScreen');
+        if (mainApp.style.display === 'none' && licenseScreen.style.display === 'none') {
+            if (window.electronAPI && window.electronAPI.validateLicense) {
+                const result = await electronAPI.validateLicense();
+                if (result.valid) {
+                    showMainApp();
+                    if (typeof initApp === 'function') initApp();
+                    go('campaigns');
+                } else {
+                    showLicenseScreen();
+                }
+            } else {
+                // No electron API (browser dev), show app
+                showMainApp();
+                if (typeof initApp === 'function') initApp();
+                go('campaigns');
+                loadLicenseInfo();
+            }
+        }
+    }, 3000);
+
+    // Load version
+    if (window.electronAPI && window.electronAPI.getAppVersion) {
+        window.electronAPI.getAppVersion().then(v => {
+            const el = document.getElementById('appVersionDisplay');
+            if (el) el.textContent = 'v' + v;
+        }).catch(() => {});
+    }
+});
+</script>
+</body>
+</html>
