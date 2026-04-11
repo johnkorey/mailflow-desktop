@@ -107,6 +107,18 @@ a{color:var(--accent);text-decoration:none}
   padding:4px 12px;
 }
 .titlebar-brand svg{width:15px;height:15px;color:var(--accent);filter:drop-shadow(0 0 6px rgba(139,92,246,.7))}
+.titlebar-slogan{
+  color:var(--text-3);
+  font-size:11px;
+  font-weight:400;
+  font-style:italic;
+  text-transform:none;
+  letter-spacing:.2px;
+  margin-left:4px;
+  padding-left:10px;
+  border-left:1px solid var(--border-2);
+  text-shadow:none;
+}
 /* When a background image is active, give the brand a subtle pill so it
    stays legible against any wallpaper. */
 body.has-bg-image .titlebar-brand{
@@ -810,7 +822,8 @@ body.has-bg-image .item-card{
     <div style="-webkit-app-region:no-drag;text-align:center;width:400px;padding:40px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:12px;box-shadow:var(--shadow)">
         <img src="/img/logo.jpg" alt="Logo" style="width:64px;height:64px;border-radius:12px;object-fit:cover;margin-bottom:16px">
         <h1 style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px">MailFlow 2.0</h1>
-        <p style="color:var(--text-3);font-size:13px;margin-bottom:28px">Enter your license key to activate</p>
+        <p class="brand-slogan" style="color:var(--accent);font-size:13px;font-weight:600;font-style:italic;margin-bottom:6px;letter-spacing:.2px">Send emails that truly deliver.</p>
+        <p style="color:var(--text-3);font-size:12px;margin-bottom:24px">Enter your license key to activate</p>
         <input type="text" id="licenseKeyInput" placeholder="XXXX-XXXX-XXXX-XXXX" style="width:100%;padding:12px 14px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:var(--radius);color:var(--text);font-size:15px;font-family:var(--mono);text-align:center;letter-spacing:2px;outline:none;margin-bottom:16px" spellcheck="false">
         <div id="licenseError" style="display:none;color:var(--red);font-size:12px;margin-bottom:12px"></div>
         <div id="licenseSuccess" style="display:none;color:var(--green);font-size:12px;margin-bottom:12px"></div>
@@ -824,7 +837,8 @@ body.has-bg-image .item-card{
     <div class="titlebar">
         <div class="titlebar-brand">
             <img src="/img/logo.jpg" alt="Logo" style="width:20px;height:20px;border-radius:4px;object-fit:cover">
-            MAILFLOW 2.0
+            <span>MAILFLOW 2.0</span>
+            <span class="titlebar-slogan">Send emails that truly deliver.</span>
         </div>
         <div class="titlebar-controls">
             <button class="titlebar-btn" onclick="electronAPI?.minimize()" title="Minimize">&#x2013;</button>
