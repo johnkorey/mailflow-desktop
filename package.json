@@ -1,6 +1,6 @@
 {
   "name": "mailflow-desktop",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "MailFlow - Email Sender Desktop Application",
   "type": "module",
   "main": "electron/main.cjs",
@@ -99,10 +99,10 @@
     },
     "publish": [
       {
-        "provider": "github",
-        "owner": "johnkorey",
-        "repo": "mailflow-desktop",
-        "releaseType": "release"
+        "provider": "generic",
+        "url": "https://github.com/johnkorey/mailflow-desktop/releases/latest/download",
+        "channel": "latest",
+        "useMultipleRangeRequest": false
       }
     ],
     "asar": true
