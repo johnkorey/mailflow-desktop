@@ -465,7 +465,7 @@ router.post('/:id/recipients', (req, res) => {
 router.put('/:id/recipients', (req, res) => {
     try {
         const { id } = req.params;
-        const { recipients } = req.body;
+        const { recipients, deduplicate } = req.body;
 
         const campaign = campaignDb.findById(id);
         if (!campaign || campaign.user_id !== req.user.id) {
@@ -476,8 +476,9 @@ router.put('/:id/recipients', (req, res) => {
             return res.status(400).json({ error: 'Recipients array is required' });
         }
 
-        // For replace mode, skip the "already exists" check because we're wiping first
-        const result = validateAndDedupeRecipients(null, recipients, { skipExistingCheck: true });
+        // For replace mode, skip the "already exists" check because we're wiping first.
+        // Dedup within the batch only when the user explicitly checked the box.
+        const result = validateAndDedupeRecipients(null, recipients, { skipExistingCheck: true, deduplicate: !!deduplicate });
 
         if (result.valid.length === 0) {
             return res.status(400).json({

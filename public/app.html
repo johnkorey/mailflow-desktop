@@ -1487,6 +1487,7 @@ body.has-bg-image .item-card{
                                 <div class="dropzone-overlay"><span>Drop .csv or .txt file to import</span></div>
                             </div>
                             <p class="form-hint">Select a list, enter manually, or drag &amp; drop a <code>.csv</code> / <code>.txt</code> file. First row can be a header; email column auto-detected.</p>
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text-2);margin-top:6px"><input type="checkbox" id="campaignDedupeRecipients"> Remove duplicate email addresses</label>
                         </div>
                         <div class="section-box">
                             <label class="form-label mb-sm">Attachment</label>
@@ -1505,6 +1506,42 @@ body.has-bg-image .item-card{
                             <button type="button" id="previewBtn" class="btn btn-info btn-sm" onclick="previewEmail()" style="margin-left:auto">Preview</button>
                         </div>
                         <div class="form-group" style="margin-bottom:0"><textarea class="form-input code-editor" id="campaignBody" rows="14" placeholder="<html>&#10;<body>&#10;  <h1>Hello {RECIPIENT_NAME}</h1>&#10;</body>&#10;</html>" required></textarea></div>
+                        <div class="form-group" style="margin-top:8px;margin-bottom:4px">
+                            <label class="form-label" style="font-size:11px" for="campaignEncoding">Message Encoding</label>
+                            <select class="form-input" id="campaignEncoding">
+                                <option value="">Off (auto / no override)</option>
+                                <option value="base64">Base64 (Content-Transfer-Encoding: base64)</option>
+                                <option value="quoted-printable">Quoted-Printable</option>
+                                <option value="7bit">7-Bit ASCII</option>
+                                <option value="8bit">8-Bit</option>
+                                <option value="binary">Binary</option>
+                                <option value="utf8-base64">UTF-8 + Base64 subject/sender (RFC 2047 =?UTF-8?B?...?=)</option>
+                                <option value="utf8-qp">UTF-8 + Quoted-Printable subject/sender (RFC 2047 =?UTF-8?Q?...?=)</option>
+                                <option value="iso-8859-1">ISO-8859-1 (Latin-1)</option>
+                                <option value="iso-8859-2">ISO-8859-2 (Central European)</option>
+                                <option value="iso-8859-5">ISO-8859-5 (Cyrillic)</option>
+                                <option value="iso-8859-7">ISO-8859-7 (Greek)</option>
+                                <option value="iso-8859-9">ISO-8859-9 (Turkish)</option>
+                                <option value="iso-8859-15">ISO-8859-15 (Latin-9, Euro sign)</option>
+                                <option value="windows-1250">Windows-1250 (Central European)</option>
+                                <option value="windows-1251">Windows-1251 (Cyrillic)</option>
+                                <option value="windows-1252">Windows-1252 (Western European)</option>
+                                <option value="windows-1253">Windows-1253 (Greek)</option>
+                                <option value="windows-1254">Windows-1254 (Turkish)</option>
+                                <option value="windows-1255">Windows-1255 (Hebrew)</option>
+                                <option value="windows-1256">Windows-1256 (Arabic)</option>
+                                <option value="shift_jis">Shift_JIS (Japanese)</option>
+                                <option value="euc-jp">EUC-JP (Japanese)</option>
+                                <option value="iso-2022-jp">ISO-2022-JP (Japanese, 7-bit)</option>
+                                <option value="euc-kr">EUC-KR (Korean)</option>
+                                <option value="gb2312">GB2312 (Chinese Simplified)</option>
+                                <option value="big5">Big5 (Chinese Traditional)</option>
+                                <option value="koi8-r">KOI8-R (Russian)</option>
+                                <option value="koi8-u">KOI8-U (Ukrainian)</option>
+                                <option value="tis-620">TIS-620 (Thai)</option>
+                            </select>
+                            <p class="form-hint">Controls how subject, sender name, and body are encoded. Base64 avoids charset issues; charset encodings (ISO, Windows, etc.) match specific regional conventions. Leave "Off" for standard UTF-8.</p>
+                        </div>
                         <details style="margin-top:10px">
                             <summary style="cursor:pointer;font-weight:600;color:var(--text-3);font-size:12px">Advanced: Content Rotation</summary>
                             <div class="section-box mt-sm" style="margin-bottom:0">

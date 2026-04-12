@@ -1325,6 +1325,8 @@ async function saveCampaign() {
     const contentType = document.getElementById('contentType').value;
     const recipientsText = document.getElementById('campaignRecipients').value;
     const reply_to = document.getElementById('campaignReplyTo').value || null;
+    const encoding = document.getElementById('campaignEncoding').value || null;
+    const dedupeRecipients = document.getElementById('campaignDedupeRecipients').checked;
 
     // Set body based on content type
     const body_html = contentType === 'html' ? bodyContent : null;
@@ -1382,6 +1384,7 @@ async function saveCampaign() {
         const campaignData = {
             name, subject, body_html, body_text, smtp_config_id, reply_to,
             attachment, attachment_id, attachment_format, attachment_custom_name,
+            encoding,
             ...rotationData
         };
 
@@ -1407,7 +1410,7 @@ async function saveCampaign() {
             if (rawLines.length > 0) {
                 const result = await api(`/user/campaigns/${campaignId}/recipients`, {
                     method: 'PUT',
-                    body: JSON.stringify({ recipients: rawLines.map(email => ({ email })) })
+                    body: JSON.stringify({ recipients: rawLines.map(email => ({ email })), deduplicate: dedupeRecipients })
                 });
                 // Show detailed import summary if anything was skipped
                 if (result && (result.invalid > 0 || result.duplicates > 0)) {
@@ -1514,6 +1517,10 @@ async function editCampaign(id) {
                 opt.selected = opt.value == c.smtp_config_id;
             }
         }
+
+        // Restore encoding setting
+        const encodingSelect = document.getElementById('campaignEncoding');
+        if (encodingSelect) encodingSelect.value = c.encoding || '';
 
         // Show existing recipients
         document.getElementById('campaignRecipients').value =

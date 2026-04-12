@@ -61,6 +61,76 @@ function isPermanentFailure(errorMessage) {
 }
 
 /**
+ * RFC 2047 encode a header value (subject / sender name) in the given charset.
+ * Used when the user selects a specific character encoding.
+ *   "Hello" → "=?ISO-8859-1?B?SGVsbG8=?="  (Base64 variant)
+ *   "Hello" → "=?ISO-8859-1?Q?Hello?="     (Quoted-Printable variant)
+ */
+function rfc2047Encode(text, charset, method = 'B') {
+    if (!text) return text;
+    const buf = Buffer.from(text, 'utf-8'); // nodemailer will handle actual charset mapping
+    if (method === 'B') {
+        return `=?${charset}?B?${buf.toString('base64')}?=`;
+    }
+    // Q encoding
+    const qEncoded = buf.toString('utf-8').replace(/[^\x20-\x7E]|[?=_]/g, (c) => {
+        return '=' + Buffer.from(c).toString('hex').toUpperCase();
+    }).replace(/ /g, '_');
+    return `=?${charset}?Q?${qEncoded}?=`;
+}
+
+/**
+ * Apply the user's selected encoding to the message. Modifies mailOptions
+ * in place. Supports:
+ *   - Transfer encodings: base64, quoted-printable, 7bit, 8bit, binary
+ *   - Subject/sender header encodings: utf8-base64, utf8-qp
+ *   - Charset encodings: iso-8859-*, windows-*, shift_jis, euc-*, gb2312, big5, koi8-*, tis-620, iso-2022-jp
+ */
+function applyMessageEncoding(mailOptions, encoding, fromName, fromEmail, subject) {
+    // Transfer-encoding group: tells the SMTP transport how to encode the body
+    const transferEncodings = ['base64', 'quoted-printable', '7bit', '8bit', 'binary'];
+    if (transferEncodings.includes(encoding)) {
+        mailOptions.textEncoding = encoding;
+        // Also encode subject in matching style for consistency
+        if (encoding === 'base64') {
+            mailOptions.subject = rfc2047Encode(subject, 'UTF-8', 'B');
+            if (fromName) mailOptions.from = `"${rfc2047Encode(fromName, 'UTF-8', 'B')}" <${fromEmail}>`;
+        } else if (encoding === 'quoted-printable') {
+            mailOptions.subject = rfc2047Encode(subject, 'UTF-8', 'Q');
+            if (fromName) mailOptions.from = `"${rfc2047Encode(fromName, 'UTF-8', 'Q')}" <${fromEmail}>`;
+        }
+        return;
+    }
+
+    // UTF-8 header-only encodings (body stays default, only subject/sender get RFC 2047)
+    if (encoding === 'utf8-base64') {
+        mailOptions.subject = rfc2047Encode(subject, 'UTF-8', 'B');
+        if (fromName) mailOptions.from = `"${rfc2047Encode(fromName, 'UTF-8', 'B')}" <${fromEmail}>`;
+        return;
+    }
+    if (encoding === 'utf8-qp') {
+        mailOptions.subject = rfc2047Encode(subject, 'UTF-8', 'Q');
+        if (fromName) mailOptions.from = `"${rfc2047Encode(fromName, 'UTF-8', 'Q')}" <${fromEmail}>`;
+        return;
+    }
+
+    // Charset-based encodings (ISO-8859-*, Windows-*, Shift_JIS, EUC-*, etc.)
+    // We set the charset on the body parts and RFC 2047-encode headers.
+    const charset = encoding.toUpperCase();
+    mailOptions.subject = rfc2047Encode(subject, charset, 'B');
+    if (fromName) {
+        mailOptions.from = `"${rfc2047Encode(fromName, charset, 'B')}" <${fromEmail}>`;
+    }
+    // Set body charset via nodemailer's encoding option
+    if (mailOptions.html) {
+        mailOptions.html = { content: mailOptions.html, charset };
+    }
+    if (mailOptions.text) {
+        mailOptions.text = { content: mailOptions.text, charset };
+    }
+}
+
+/**
  * Email Sender class with event emitter for progress tracking
  */
 export class EmailSender extends EventEmitter {
@@ -954,6 +1024,11 @@ export class EmailSender extends EventEmitter {
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
             }
         };
+
+        // Apply user-selected encoding if set on the campaign
+        if (campaign.encoding) {
+            applyMessageEncoding(mailOptions, campaign.encoding, fromName, fromEmail, subject);
+        }
 
         // Add Reply-To header if specified
         if (campaign.reply_to) {

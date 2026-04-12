@@ -241,6 +241,17 @@ function runMigrations() {
         // Column already exists
     }
 
+    // Add encoding column to campaigns (message encoding: base64, quoted-printable, etc.)
+    try {
+        const campCols2 = db.prepare("PRAGMA table_info(campaigns)").all();
+        if (!campCols2.some(col => col.name === 'encoding')) {
+            db.exec("ALTER TABLE campaigns ADD COLUMN encoding TEXT DEFAULT NULL");
+            console.log('Added encoding column to campaigns');
+        }
+    } catch (error) {
+        // Column already exists
+    }
+
     // Create unsubscribes table for CAN-SPAM/GDPR compliance
     try {
         db.exec(`
@@ -499,13 +510,15 @@ export const campaignDb = {
                 user_id, name, subject, body_html, body_text, reply_to,
                 attachment_name, attachment_content, attachment_id, attachment_format, attachment_custom_name, smtp_config_id,
                 subjects_list, sender_names_list, cta_links_list, smtp_ids_list,
-                rotate_subjects, rotate_senders, rotate_cta, rotate_smtp, smtp_rotation_type
+                rotate_subjects, rotate_senders, rotate_cta, rotate_smtp, smtp_rotation_type,
+                encoding
             )
             VALUES (
                 @user_id, @name, @subject, @body_html, @body_text, @reply_to,
                 @attachment_name, @attachment_content, @attachment_id, @attachment_format, @attachment_custom_name, @smtp_config_id,
                 @subjects_list, @sender_names_list, @cta_links_list, @smtp_ids_list,
-                @rotate_subjects, @rotate_senders, @rotate_cta, @rotate_smtp, @smtp_rotation_type
+                @rotate_subjects, @rotate_senders, @rotate_cta, @rotate_smtp, @smtp_rotation_type,
+                @encoding
             )
         `);
         const result = stmt.run({
@@ -529,7 +542,8 @@ export const campaignDb = {
             rotate_senders: campaignData.rotate_senders ? 1 : 0,
             rotate_cta: campaignData.rotate_cta ? 1 : 0,
             rotate_smtp: campaignData.rotate_smtp ? 1 : 0,
-            smtp_rotation_type: campaignData.smtp_rotation_type || 'round_robin'
+            smtp_rotation_type: campaignData.smtp_rotation_type || 'round_robin',
+            encoding: campaignData.encoding || null
         });
         return { id: result.lastInsertRowid, ...campaignData };
     },
@@ -636,6 +650,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * @param {Array} recipients  - Array of { email, name? } — free-form input
  * @param {object} opts
  *   - skipExistingCheck: don't query the DB for existing recipients
+ *   - deduplicate: when true, remove duplicate emails within the batch
  * @returns {{ valid, invalid, duplicates, already_exists, summary }}
  */
 export function validateAndDedupeRecipients(campaignId, recipients, opts = {}) {
@@ -655,6 +670,9 @@ export function validateAndDedupeRecipients(campaignId, recipients, opts = {}) {
         }
     }
 
+    // Only track in-batch duplicates when the caller explicitly asked for dedup
+    const seenInBatch = opts.deduplicate ? new Set() : null;
+
     for (const raw of recipients || []) {
         if (!raw || typeof raw !== 'object') continue;
         const email = (raw.email || '').trim().toLowerCase();
@@ -664,21 +682,28 @@ export function validateAndDedupeRecipients(campaignId, recipients, opts = {}) {
             invalid.push(email);
             continue;
         }
+        if (seenInBatch && seenInBatch.has(email)) {
+            duplicates.push(email);
+            continue;
+        }
         if (existingSet.has(email)) {
             already_exists.push(email);
             continue;
         }
+        if (seenInBatch) seenInBatch.add(email);
         valid.push({ email, name: raw.name || null });
     }
 
     return {
         valid,
         invalid,
+        duplicates,
         already_exists,
         summary: {
             total_input: (recipients || []).length,
             imported: valid.length,
             invalid: invalid.length,
+            duplicates: duplicates.length,
             already_exists: already_exists.length
         }
     };
