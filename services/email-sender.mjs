@@ -1039,7 +1039,7 @@ export class EmailSender extends EventEmitter {
     
     /**
      * Auto-fix common HTML problems so campaigns render reliably in Outlook/Gmail.
-     * - Strips markdown code fences (```html ... ```) that AI assistants add
+     * - Strips markdown code fences (```html ... ```) that external tools add
      * - Unwraps <img src="{QR_CODE}"> misuse so QR_CODE is a standalone placeholder
      * - Fills empty <a href=""> buttons with the current {LINK} URL
      * - Moves stray content after </body> back inside the body

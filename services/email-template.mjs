@@ -725,81 +725,9 @@ ${secondaryBtnHtml}
     }
 }
 
-/**
- * Parse AI response into structured content
- */
-export function parseAIContent(aiResponse) {
-    // Try to extract structured content from AI response
-    const content = {
-        title: '',
-        subtitle: '',
-        body: '',
-        boxTitle: '',
-        boxContent: '',
-        boxFooter: '',
-        buttonText: '',
-        secondaryButtonText: '',
-        footer: '',
-        disclaimer: ''
-    };
-
-    // Check if AI returned JSON
-    try {
-        const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)```/);
-        if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[1]);
-            return { ...content, ...parsed };
-        }
-    } catch (e) {
-        // Not JSON, parse as text
-    }
-
-    // Parse markdown-style sections
-    const lines = aiResponse.split('\n').filter(l => l.trim());
-    
-    let currentSection = 'body';
-    let bodyLines = [];
-
-    for (const line of lines) {
-        const trimmed = line.trim();
-        
-        // Check for section headers
-        if (trimmed.startsWith('# ') || trimmed.startsWith('Title:')) {
-            content.title = trimmed.replace(/^#\s*/, '').replace(/^Title:\s*/i, '');
-        } else if (trimmed.startsWith('## ') || trimmed.startsWith('Subtitle:')) {
-            content.subtitle = trimmed.replace(/^##\s*/, '').replace(/^Subtitle:\s*/i, '');
-        } else if (trimmed.toLowerCase().startsWith('button:')) {
-            content.buttonText = trimmed.replace(/^button:\s*/i, '');
-        } else if (trimmed.toLowerCase().startsWith('box title:')) {
-            content.boxTitle = trimmed.replace(/^box title:\s*/i, '');
-        } else if (trimmed.toLowerCase().startsWith('box content:')) {
-            content.boxContent = trimmed.replace(/^box content:\s*/i, '');
-        } else if (trimmed.toLowerCase().startsWith('footer:')) {
-            content.footer = trimmed.replace(/^footer:\s*/i, '');
-        } else {
-            bodyLines.push(trimmed);
-        }
-    }
-
-    // If no title found, use first line
-    if (!content.title && bodyLines.length > 0) {
-        content.title = bodyLines.shift();
-    }
-
-    // Remaining lines are body
-    content.body = bodyLines.join(' ');
-
-    // Set defaults if missing
-    if (!content.buttonText) content.buttonText = 'View Now';
-    if (!content.disclaimer) content.disclaimer = 'This message was automatically generated and is intended for informational purposes only.';
-
-    return content;
-}
-
 export default {
     encodeToEntities,
     generateEmailTemplate,
-    parseAIContent,
     getTemplateStyle,
     TEMPLATE_STYLES
 };
