@@ -119,6 +119,20 @@ a{color:var(--accent);text-decoration:none}
   border-left:1px solid var(--border-2);
   text-shadow:none;
 }
+.titlebar-version{
+  display:inline-flex;
+  align-items:center;
+  margin-left:8px;
+  padding:2px 8px;
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.3px;
+  color:var(--accent);
+  background:rgba(139,92,246,.12);
+  border:1px solid rgba(139,92,246,.3);
+  border-radius:8px;
+  font-family:var(--mono, 'Consolas', monospace);
+}
 /* When a background image is active, give the brand a subtle pill so it
    stays legible against any wallpaper. */
 body.has-bg-image .titlebar-brand{
@@ -838,12 +852,13 @@ body.has-bg-image .item-card{
         <div class="titlebar-brand">
             <img src="/img/logo.jpg" alt="Logo" style="width:20px;height:20px;border-radius:4px;object-fit:cover">
             <span>MAILFLOW 2.0</span>
+            <span class="titlebar-version" id="titlebarVersion">v—</span>
             <span class="titlebar-slogan">Send emails that truly deliver.</span>
         </div>
         <div class="titlebar-controls">
-            <button class="titlebar-btn" onclick="electronAPI?.minimize()" title="Minimize">&#x2013;</button>
-            <button class="titlebar-btn" onclick="electronAPI?.maximize()" title="Maximize">&#x25A1;</button>
-            <button class="titlebar-btn close" onclick="electronAPI?.close()" title="Close">&#x2715;</button>
+            <button class="titlebar-btn" onclick="electronAPI?.minimize()" title="Minimize" aria-label="Minimize window">&#x2013;</button>
+            <button class="titlebar-btn" onclick="electronAPI?.maximize()" title="Maximize" aria-label="Maximize window">&#x25A1;</button>
+            <button class="titlebar-btn close" onclick="electronAPI?.close()" title="Close" aria-label="Close window">&#x2715;</button>
         </div>
     </div>
 
@@ -1257,7 +1272,7 @@ body.has-bg-image .item-card{
                 <div class="card">
                     <div class="card-hdr"><h3>Appearance</h3></div>
                     <div class="card-body">
-                        <p class="form-hint mb-md">Upload a background image to personalize the workspace. The image is stored locally on this machine and only visible to you.</p>
+                        <p class="form-hint mb-md">MailFlow ships with a built-in wallpaper. Upload your own image to replace it — stored locally on this machine, visible only to you.</p>
 
                         <div class="bg-preview" id="bgPreview">
                             <div class="bg-preview-empty">
@@ -1266,10 +1281,12 @@ body.has-bg-image .item-card{
                             </div>
                         </div>
 
+                        <p class="form-hint mb-sm" id="bgStatusLabel" style="font-weight:500;color:var(--text-secondary)">Using the built-in MailFlow wallpaper</p>
+
                         <div class="form-group">
-                            <label class="form-label">Image file</label>
+                            <label class="form-label">Upload your own image</label>
                             <input type="file" id="bgImageInput" accept="image/*" class="form-input" onchange="handleBackgroundImageUpload(event)">
-                            <p class="form-hint">Max size: 3 MB. Supported: JPG, PNG, WEBP.</p>
+                            <p class="form-hint">Max size: 3 MB. Supported: JPG, PNG, WEBP, SVG.</p>
                         </div>
 
                         <div class="form-group">
@@ -1288,7 +1305,7 @@ body.has-bg-image .item-card{
                         </div>
 
                         <div class="btn-row">
-                            <button type="button" class="btn btn-danger" onclick="clearBackgroundImage()">Remove Background</button>
+                            <button type="button" id="bgClearBtn" class="btn btn-secondary" onclick="clearBackgroundImage()">Restore Default Wallpaper</button>
                         </div>
                     </div>
                 </div>
@@ -1440,7 +1457,7 @@ body.has-bg-image .item-card{
 <!-- Campaign Modal -->
 <div class="modal-overlay" id="campaignModal">
     <div class="modal modal-xl">
-        <div class="modal-header"><h3 id="campaignModalTitle">New Campaign</h3><button class="modal-close" onclick="closeCampaignModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3 id="campaignModalTitle">New Campaign</h3><button class="modal-close" aria-label="Close dialog" onclick="closeCampaignModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body" style="max-height:calc(90vh - 120px)">
             <div id="draftRestoreBanner" class="draft-banner" style="display:none">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -1516,7 +1533,7 @@ body.has-bg-image .item-card{
     <div class="modal modal-xl">
         <div class="modal-header">
             <h3>Email Preview <span id="previewSpamBadge" class="badge" style="margin-left:10px"></span></h3>
-            <button class="modal-close" onclick="closePreviewModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+            <button class="modal-close" aria-label="Close dialog" onclick="closePreviewModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="modal-body" style="padding:0;display:flex;flex-direction:column;height:75vh">
             <div style="padding:14px 18px;background:rgba(0,0,0,.12);border-bottom:1px solid var(--border)">
@@ -1538,7 +1555,7 @@ body.has-bg-image .item-card{
 <!-- SMTP Modal -->
 <div class="modal-overlay" id="smtpModal">
     <div class="modal">
-        <div class="modal-header"><h3 id="smtpModalTitle">Add Email Server</h3><button class="modal-close" onclick="closeSmtpModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3 id="smtpModalTitle">Add Email Server</h3><button class="modal-close" aria-label="Close dialog" onclick="closeSmtpModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body">
             <form id="smtpForm">
                 <input type="hidden" id="smtpId">
@@ -1572,7 +1589,7 @@ body.has-bg-image .item-card{
 <!-- Progress Modal -->
 <div class="modal-overlay" id="progressModal">
     <div class="modal">
-        <div class="modal-header"><h3>Campaign Progress</h3><button class="modal-close" onclick="closeProgressModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3>Campaign Progress</h3><button class="modal-close" aria-label="Close dialog" onclick="closeProgressModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body" style="text-align:center;padding:24px">
             <div class="stat-value" id="progressPercent">0%</div>
             <div class="progress mt-sm mb-sm"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
@@ -1590,7 +1607,7 @@ body.has-bg-image .item-card{
 <!-- Attachment Library Modal -->
 <div class="modal-overlay" id="attachmentLibraryModal">
     <div class="modal modal-lg">
-        <div class="modal-header"><h3 id="attachmentModalTitle">New Attachment</h3><button class="modal-close" onclick="closeAttachmentModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3 id="attachmentModalTitle">New Attachment</h3><button class="modal-close" aria-label="Close dialog" onclick="closeAttachmentModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body">
             <form id="attachmentLibraryForm">
                 <input type="hidden" id="editAttachmentId">
@@ -1623,7 +1640,7 @@ body.has-bg-image .item-card{
 <!-- Attachment Preview Modal -->
 <div class="modal-overlay" id="attachmentPreviewModal">
     <div class="modal modal-lg">
-        <div class="modal-header"><h3>Attachment Preview</h3><button class="modal-close" onclick="closeAttachmentPreviewModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3>Attachment Preview</h3><button class="modal-close" aria-label="Close dialog" onclick="closeAttachmentPreviewModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body"><iframe id="attachmentPreviewFrame" style="width:100%;height:380px;border:1px solid var(--border);border-radius:var(--radius);background:#fff"></iframe></div>
         <div class="modal-footer"><button class="btn btn-secondary" onclick="closeAttachmentPreviewModal()">Close</button></div>
     </div>
@@ -1635,7 +1652,7 @@ body.has-bg-image .item-card{
         <div class="modal-header">
             <h3>Email Preview</h3>
             <div class="flex gap-sm"><button class="btn btn-secondary btn-sm" onclick="togglePreviewMode('desktop')" id="previewDesktopBtn">Desktop</button><button class="btn btn-secondary btn-sm" onclick="togglePreviewMode('mobile')" id="previewMobileBtn">Mobile</button></div>
-            <button class="modal-close" onclick="closePreviewModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+            <button class="modal-close" aria-label="Close dialog" onclick="closePreviewModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="modal-body" style="padding:20px;background:#e0e0e0;display:flex;justify-content:center">
             <div id="previewContainer" style="width:100%;max-width:700px;transition:all .3s"><iframe id="previewFrame" style="width:100%;height:460px;border:none;border-radius:var(--radius);background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.15)"></iframe></div>
@@ -1648,7 +1665,7 @@ body.has-bg-image .item-card{
 <!-- Email Template Modal -->
 <div class="modal-overlay" id="templateModal">
     <div class="modal modal-lg">
-        <div class="modal-header"><h3 id="templateModalTitle">New Template</h3><button class="modal-close" onclick="closeTemplateModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3 id="templateModalTitle">New Template</h3><button class="modal-close" aria-label="Close dialog" onclick="closeTemplateModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body">
             <input type="hidden" id="templateId">
             <div class="form-row">
@@ -1669,7 +1686,7 @@ body.has-bg-image .item-card{
 <!-- Clean Recipient List Modal -->
 <div class="modal-overlay" id="cleanListModal">
     <div class="modal" style="width:480px">
-        <div class="modal-header"><h3>Clean Recipient List</h3><button class="modal-close" onclick="closeCleanListModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3>Clean Recipient List</h3><button class="modal-close" aria-label="Close dialog" onclick="closeCleanListModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body">
             <p class="form-hint mb-md">Filter <strong id="cleanListName"></strong> by removing unwanted addresses. The list is updated in place — recipients that pass all checks remain.</p>
             <input type="hidden" id="cleanListId">
@@ -1693,7 +1710,7 @@ body.has-bg-image .item-card{
 <!-- Add Unsubscribe Modal -->
 <div class="modal-overlay" id="addUnsubscribeModal">
     <div class="modal" style="width:440px">
-        <div class="modal-header"><h3>Add to Unsubscribe List</h3><button class="modal-close" onclick="closeAddUnsubscribeModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3>Add to Unsubscribe List</h3><button class="modal-close" aria-label="Close dialog" onclick="closeAddUnsubscribeModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body">
             <p class="form-hint mb-md">Manually suppress an email address. Future campaigns will skip this recipient automatically.</p>
             <div class="form-group">
@@ -1710,7 +1727,7 @@ body.has-bg-image .item-card{
 
 <div class="modal-overlay" id="recipientListModal">
     <div class="modal modal-lg">
-        <div class="modal-header"><h3 id="recipientListModalTitle">New Recipient List</h3><button class="modal-close" onclick="closeRecipientListModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3 id="recipientListModalTitle">New Recipient List</h3><button class="modal-close" aria-label="Close dialog" onclick="closeRecipientListModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body">
             <form id="recipientListForm">
                 <input type="hidden" id="recipientListId">
@@ -1726,7 +1743,7 @@ body.has-bg-image .item-card{
 <!-- Generic List Modal -->
 <div class="modal-overlay" id="listModal">
     <div class="modal modal-lg">
-        <div class="modal-header"><h3 id="listModalTitle">New List</h3><button class="modal-close" onclick="closeListModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3 id="listModalTitle">New List</h3><button class="modal-close" aria-label="Close dialog" onclick="closeListModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body">
             <form id="listForm">
                 <input type="hidden" id="listType"><input type="hidden" id="listId">
@@ -1741,7 +1758,7 @@ body.has-bg-image .item-card{
 <!-- Proxy Modal -->
 <div class="modal-overlay" id="proxyModal">
     <div class="modal">
-        <div class="modal-header"><h3 id="proxyModalTitle">Add Proxy</h3><button class="modal-close" onclick="closeProxyModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3 id="proxyModalTitle">Add Proxy</h3><button class="modal-close" aria-label="Close dialog" onclick="closeProxyModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body">
             <form id="proxyForm">
                 <input type="hidden" id="proxyId">
@@ -1757,7 +1774,7 @@ body.has-bg-image .item-card{
 <!-- Inbox Finder Results Modal -->
 <div class="modal-overlay" id="inboxFinderResultsModal">
     <div class="modal modal-lg">
-        <div class="modal-header"><h3>Test Results</h3><button class="modal-close" onclick="closeInboxFinderResultsModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="modal-header"><h3>Test Results</h3><button class="modal-close" aria-label="Close dialog" onclick="closeInboxFinderResultsModal()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="modal-body">
             <div id="inboxFinderResultsSummary" class="mb-md"></div>
             <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Status</th><th>Response</th></tr></thead><tbody id="inboxFinderResultsBody"></tbody></table></div>
@@ -2002,14 +2019,14 @@ async function loadLicenseInfo() {
     if (!window.electronAPI?.getLicenseInfo) return;
 
     // 1. Render cached local info immediately so the UI isn't blank
+    let info = null;
     try {
-        const info = await electronAPI.getLicenseInfo();
+        info = await electronAPI.getLicenseInfo();
         if (info && info.license_key) {
             const k = info.license_key;
             setLicenseField('licenseKeyDisplay', k.length > 8 ? k.substring(0, 4) + '••••••••' + k.substring(k.length - 4) : k);
         }
         if (info && info.machine_id) {
-            // Shorten the hash so it fits
             const m = info.machine_id;
             setLicenseField('licenseMachineIdDisplay', m.length > 16 ? m.substring(0, 8) + '…' + m.substring(m.length - 8) : m);
         }
@@ -2025,25 +2042,29 @@ async function loadLicenseInfo() {
             return;
         }
 
-        if (result.offline) {
-            setLicenseStatusBadge('offline', 'Offline (cached)');
-            return;
-        }
+        // The license blob — prefer the fresh one from validate(), fall back
+        // to the cached summary from the first call.
+        const data = result.license || info || {};
+        window.mailflowEntitlements = data.entitlements || {};
+        window.mailflowLicense = data;
 
-        // result.data is whatever the server returned. We render any known fields.
-        const data = result.data || {};
-        setLicenseStatusBadge('active', 'Active');
+        setLicenseStatusBadge(
+            result.offline ? 'offline' : 'active',
+            result.offline ? 'Offline (cached)' : (data.is_trial ? 'Trial' : 'Active')
+        );
 
-        // Plan — try common field names
-        const plan = data.plan || data.plan_name || data.tier || data.license_type || data.product;
-        setLicenseField('licensePlanDisplay', plan || '-');
+        // Plan / tier — never fall back to the raw product slug, that just shows
+        // 'mailflow' which is meaningless to the user.
+        const plan = data.tier || data.plan || data.plan_name || data.license_type;
+        const planLabel = plan ? (plan.charAt(0).toUpperCase() + plan.slice(1)) : '—';
+        setLicenseField('licensePlanDisplay', planLabel + (data.is_trial ? ' (Trial)' : ''));
 
-        // Email — try common field names
-        const email = data.email || data.customer_email || data.user_email || data.owner_email;
+        // Customer email — new contract: data.customer.email
+        const email = (data.customer && data.customer.email) || data.email || data.customer_email || data.user_email;
         setLicenseField('licenseEmailDisplay', email || '-');
 
         // Expiry
-        const expiresRaw = data.expires_at || data.expiry || data.expires || data.expire_at || data.valid_until;
+        const expiresRaw = data.expiry || data.expires_at || data.expires || data.expire_at || data.valid_until;
         if (expiresRaw) {
             setLicenseField('licenseExpiresDisplay', formatLicenseDate(expiresRaw));
             const validFor = formatValidFor(expiresRaw);
@@ -2055,10 +2076,81 @@ async function loadLicenseInfo() {
             setLicenseField('licenseExpiresDisplay', 'Never');
             setLicenseField('licenseValidForDisplay', 'Lifetime');
         }
+
+        // Render trial badge in titlebar
+        renderTrialBadge(data);
     } catch (err) {
         console.error('[License] Failed to fetch license info:', err);
         setLicenseStatusBadge('offline', 'Offline');
     }
+}
+
+/**
+ * Show a small "Trial — 12 days left" pill in the titlebar when the license
+ * is a trial, so the user always knows their remaining runway.
+ */
+function renderTrialBadge(license) {
+    let pill = document.getElementById('trialBadge');
+    if (!license || !license.is_trial || !license.expiry) {
+        if (pill) pill.remove();
+        return;
+    }
+    const msLeft = new Date(license.expiry).getTime() - Date.now();
+    const daysLeft = Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
+    const label = daysLeft === 1 ? '1 day left' : `${daysLeft} days left`;
+    // Color goes from purple (healthy) → amber (1 week left) → red (<3 days).
+    // Alarming colors should mean alarming things.
+    const bg = daysLeft < 3
+        ? 'linear-gradient(135deg,#ef4444,#dc2626)'
+        : daysLeft < 7
+            ? 'linear-gradient(135deg,#f59e0b,#d97706)'
+            : 'linear-gradient(135deg,#8b5cf6,#7c3aed)';
+
+    if (!pill) {
+        pill = document.createElement('span');
+        pill.id = 'trialBadge';
+        pill.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:3px 10px;margin-left:10px;color:#fff;border-radius:10px;font-size:11px;font-weight:600;letter-spacing:.3px;-webkit-app-region:no-drag';
+        const sloganEl = document.querySelector('.titlebar-slogan');
+        if (sloganEl && sloganEl.parentNode) sloganEl.parentNode.insertBefore(pill, sloganEl.nextSibling);
+    }
+    pill.style.background = bg;
+    pill.textContent = `TRIAL — ${label}`;
+}
+
+/**
+ * Mid-session blocker. Called when the periodic 24h re-check reports invalid.
+ * Shows a full-screen message and forces the user to re-activate.
+ */
+function showLicenseRevokedBlocker(reason) {
+    const existing = document.getElementById('licenseRevokedBlocker');
+    if (existing) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'licenseRevokedBlocker';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(5,3,16,0.95);backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:40px';
+    // Escape the reason — even though it comes from our own license server,
+    // defense-in-depth says don't trust ANY string going into innerHTML.
+    const safeReason = (reason || 'Contact support if you believe this is a mistake.')
+        .toString()
+        .replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    overlay.innerHTML = `
+        <div style="max-width:520px">
+            <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+            <h1 style="font-size:28px;margin:0 0 12px 0;font-weight:700">License no longer valid</h1>
+            <p style="color:#c4b5fd;margin:0 0 24px 0;font-size:15px">Your license was revoked or has expired. Please renew to continue using MailFlow.</p>
+            <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:12px 16px;border-radius:8px;font-size:12px;color:#a78bfa;margin-bottom:24px">${safeReason}</div>
+            <button onclick="forceReactivate()" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:0;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Enter a new license</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// Wipe local state and show the activation screen — used by the revoked-license
+// blocker. Skips the confirm() prompt because the user is already locked out.
+async function forceReactivate() {
+    try { await electronAPI.deactivateLicense(); } catch {}
+    const overlay = document.getElementById('licenseRevokedBlocker');
+    if (overlay) overlay.remove();
+    showLicenseScreen();
 }
 
 async function handleDeactivateLicense() {
@@ -2122,6 +2214,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Mid-session revalidation: if the 24h re-check reports invalid, show
+    // the full-screen blocker so the user can't keep using a revoked/expired
+    // license silently.
+    if (window.electronAPI && window.electronAPI.onLicenseStatusChanged) {
+        window.electronAPI.onLicenseStatusChanged(function(status) {
+            if (!status.valid) {
+                showLicenseRevokedBlocker(status.reason);
+            } else {
+                // License came back healthy — dismiss the blocker if it was up.
+                const overlay = document.getElementById('licenseRevokedBlocker');
+                if (overlay) overlay.remove();
+                loadLicenseInfo();
+            }
+        });
+    }
+
     // Fallback: validate directly if status event doesn't fire in 3s
     setTimeout(async function() {
         const mainApp = document.getElementById('mainApp');
@@ -2146,9 +2254,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 3000);
 
-    // Load version
+    // Load version — drives both the titlebar pill (always visible) and the
+    // Account > License card field. Both read from package.json via
+    // Electron's app.getVersion(), so bumping package.json updates both.
     if (window.electronAPI && window.electronAPI.getAppVersion) {
         window.electronAPI.getAppVersion().then(v => {
+            const pill = document.getElementById('titlebarVersion');
+            if (pill) pill.textContent = 'v' + v;
             const el = document.getElementById('appVersionDisplay');
             if (el) el.textContent = 'v' + v;
         }).catch(() => {});

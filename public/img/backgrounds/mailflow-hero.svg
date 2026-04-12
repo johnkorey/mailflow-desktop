@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" preserveAspectRatio="xMidYMid slice" width="2560" height="1440">
+  <defs>
+    <!-- Deep navy base gradient -->
+    <radialGradient id="baseBg" cx="50%" cy="45%" r="85%">
+      <stop offset="0%" stop-color="#1a1333"/>
+      <stop offset="45%" stop-color="#0f0a1f"/>
+      <stop offset="100%" stop-color="#050310"/>
+    </radialGradient>
+
+    <!-- Purple accent glow (top-left) -->
+    <radialGradient id="glowA" cx="18%" cy="22%" r="42%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#8b5cf6" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Violet accent glow (bottom-right) -->
+    <radialGradient id="glowB" cx="82%" cy="78%" r="45%">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.45"/>
+      <stop offset="55%" stop-color="#7c3aed" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Cyan accent (top-right, cool highlight) -->
+    <radialGradient id="glowC" cx="88%" cy="15%" r="30%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Pink accent (bottom-left) -->
+    <radialGradient id="glowD" cx="12%" cy="85%" r="32%">
+      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Title gradient: white → lavender -->
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#e9d5ff"/>
+      <stop offset="100%" stop-color="#c4b5fd"/>
+    </linearGradient>
+
+    <!-- Divider line gradient -->
+    <linearGradient id="divGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0"/>
+      <stop offset="35%" stop-color="#a78bfa" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="65%" stop-color="#a78bfa" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Grid pattern -->
+    <pattern id="grid" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+      <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#ffffff" stroke-width="1" stroke-opacity="0.04"/>
+    </pattern>
+
+    <!-- Soft glow filter for title -->
+    <filter id="titleGlow" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Softer glow filter for slogan -->
+    <filter id="sloganGlow" x="-10%" y="-50%" width="120%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Radial mask so grid fades toward the edges -->
+    <radialGradient id="gridFade" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <mask id="gridMask">
+      <rect width="2560" height="1440" fill="url(#gridFade)"/>
+    </mask>
+
+    <!-- Vignette -->
+    <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
+      <stop offset="60%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.7"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Base layers -->
+  <rect width="2560" height="1440" fill="url(#baseBg)"/>
+  <rect width="2560" height="1440" fill="url(#grid)" mask="url(#gridMask)"/>
+  <rect width="2560" height="1440" fill="url(#glowA)"/>
+  <rect width="2560" height="1440" fill="url(#glowB)"/>
+  <rect width="2560" height="1440" fill="url(#glowC)"/>
+  <rect width="2560" height="1440" fill="url(#glowD)"/>
+
+  <!-- Floating orbs for depth -->
+  <circle cx="420" cy="320" r="180" fill="#8b5cf6" fill-opacity="0.08"/>
+  <circle cx="2180" cy="1120" r="220" fill="#a78bfa" fill-opacity="0.07"/>
+  <circle cx="2280" cy="260" r="120" fill="#38bdf8" fill-opacity="0.06"/>
+  <circle cx="340" cy="1160" r="150" fill="#ec4899" fill-opacity="0.05"/>
+  <circle cx="1280" cy="1280" r="90" fill="#ffffff" fill-opacity="0.03"/>
+
+  <!-- Decorative thin arcs -->
+  <g stroke="#a78bfa" stroke-opacity="0.12" fill="none" stroke-width="1.5">
+    <circle cx="1280" cy="720" r="520"/>
+    <circle cx="1280" cy="720" r="680"/>
+    <circle cx="1280" cy="720" r="840"/>
+  </g>
+
+  <!-- Title: MailFlow -->
+  <g filter="url(#titleGlow)">
+    <text x="1280" y="720"
+          text-anchor="middle"
+          font-family="'Segoe UI', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif"
+          font-size="280"
+          font-weight="800"
+          letter-spacing="-8"
+          fill="url(#titleGrad)">MailFlow</text>
+  </g>
+
+  <!-- Divider -->
+  <rect x="1000" y="780" width="560" height="2" fill="url(#divGrad)"/>
+  <circle cx="1280" cy="781" r="5" fill="#ffffff" fill-opacity="0.9"/>
+
+  <!-- Slogan -->
+  <g filter="url(#sloganGlow)">
+    <text x="1280" y="870"
+          text-anchor="middle"
+          font-family="'Segoe UI', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif"
+          font-size="54"
+          font-weight="300"
+          font-style="italic"
+          letter-spacing="6"
+          fill="#e9d5ff"
+          fill-opacity="0.92">Send emails that truly deliver.</text>
+  </g>
+
+  <!-- Subtle wordmark tag below slogan -->
+  <text x="1280" y="940"
+        text-anchor="middle"
+        font-family="'Segoe UI', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif"
+        font-size="18"
+        font-weight="500"
+        letter-spacing="14"
+        fill="#a78bfa"
+        fill-opacity="0.6">P R O F E S S I O N A L &#160;&#160;E M A I L &#160;&#160;S U I T E</text>
+
+  <!-- Vignette overlay -->
+  <rect width="2560" height="1440" fill="url(#vignette)"/>
+</svg>

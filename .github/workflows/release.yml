@@ -1,0 +1,158 @@
+# MailFlow Desktop — release pipeline.
+#
+# Trigger:
+#   Push a tag matching v*.*.* (e.g. `git tag v2.0.5 && git push origin v2.0.5`).
+#   The tag MUST match the `version` field in package.json at that commit —
+#   a mismatch fails the job fast so you don't ship 2.0.5 with the 2.0.4 binary.
+#
+# What it does:
+#   1. Checks out the tagged commit on a Windows runner.
+#   2. Installs dependencies.
+#   3. Verifies tag vs package.json version.
+#   4. Builds the NSIS installer (electron-builder).
+#   5. Uploads the three artifacts to the license server's admin endpoint
+#      using the same scripts/release.cjs the dev box uses. From that moment,
+#      every installed copy picks up the update on its next 4-hour check.
+#   6. Attaches the installer + latest.yml to the workflow run as artifacts
+#      so you can download them from the Actions page for audit.
+#
+# Secrets required (Settings → Secrets and variables → Actions → New secret):
+#   UPDATE_ADMIN_TOKEN — the admin token for mailflow.zeabur.app/admin/updates/upload.
+#                        The job will hard-fail with a clear error if it's not set.
+#
+# To ship a new version after editing code:
+#   1. Bump the version in package.json (e.g. 2.0.4 → 2.0.5) and commit.
+#   2. git tag v2.0.5
+#   3. git push origin main --tags
+#   4. Watch the Actions tab — the build + upload run end-to-end in ~6 minutes.
+#   5. All installed copies auto-update on their next 4-hour check.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  # Manual trigger as an escape hatch — re-runs the pipeline against whatever
+  # tag you pick from the Actions UI. Useful if the upload step failed
+  # transiently (e.g. license server was down) and you want to retry without
+  # re-tagging.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v2.0.5)'
+        required: true
+        type: string
+
+# Prevent two concurrent releases from racing each other against the license
+# server. If a second tag lands while the first is still building, GitHub
+# queues it instead of running them in parallel.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    name: Build installer and upload to license server
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Resolve ref
+        id: ref
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            echo "ref=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tag matches package.json version
+        shell: bash
+        run: |
+          TAG_VERSION="${{ steps.ref.outputs.ref }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "Tag version : $TAG_VERSION"
+          echo "package.json: $PKG_VERSION"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag $TAG_VERSION does not match package.json version $PKG_VERSION"
+            echo "::error::Bump package.json and re-tag before pushing."
+            exit 1
+          fi
+
+      - name: Verify UPDATE_ADMIN_TOKEN is configured
+        shell: bash
+        env:
+          UPDATE_ADMIN_TOKEN: ${{ secrets.UPDATE_ADMIN_TOKEN }}
+        run: |
+          if [ -z "$UPDATE_ADMIN_TOKEN" ]; then
+            echo "::error::UPDATE_ADMIN_TOKEN secret is not set."
+            echo "::error::Add it under Settings → Secrets and variables → Actions → New repository secret"
+            exit 1
+          fi
+          echo "Token is set (length: ${#UPDATE_ADMIN_TOKEN})"
+
+      - name: Build NSIS installer
+        run: npm run build:installer
+        env:
+          # electron-builder sometimes needs this to avoid spurious cache
+          # lookups against GitHub Releases during the build phase.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify build artifacts exist
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          for f in \
+            "dist/latest.yml" \
+            "dist/MailFlow-Setup-${VERSION}.exe" \
+            "dist/MailFlow-Setup-${VERSION}.exe.blockmap"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing expected build artifact: $f"
+              exit 1
+            fi
+            echo "OK $f ($(stat -c %s "$f" 2>/dev/null || stat -f %z "$f") bytes)"
+          done
+
+      - name: Upload artifacts to workflow run (audit copy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mailflow-installer
+          path: |
+            dist/MailFlow-Setup-*.exe
+            dist/MailFlow-Setup-*.exe.blockmap
+            dist/latest.yml
+          retention-days: 30
+
+      - name: Publish to MailFlow license server
+        env:
+          UPDATE_ADMIN_TOKEN: ${{ secrets.UPDATE_ADMIN_TOKEN }}
+        run: node scripts/release.cjs
+
+      - name: Summary
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          {
+            echo "## MailFlow $VERSION shipped"
+            echo ""
+            echo "- Tag: \`${{ steps.ref.outputs.ref }}\`"
+            echo "- Installer uploaded to: \`https://mailflow.zeabur.app/updates/latest\`"
+            echo "- All installed copies will auto-update on their next 4-hour check."
+          } >> "$GITHUB_STEP_SUMMARY"

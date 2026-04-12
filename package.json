@@ -1,6 +1,6 @@
 {
   "name": "mailflow-desktop",
-  "version": "2.0.2",
+  "version": "2.0.4",
   "description": "MailFlow - Email Sender Desktop Application",
   "type": "module",
   "main": "electron/main.cjs",
@@ -15,6 +15,13 @@
     "electron:build": "electron-builder",
     "electron:pack": "electron-builder --dir",
     "electron:publish": "electron-builder --publish always",
+    "release": "node scripts/bump-and-build.cjs",
+    "release:patch": "node scripts/bump-and-build.cjs patch",
+    "release:minor": "node scripts/bump-and-build.cjs minor",
+    "release:major": "node scripts/bump-and-build.cjs major",
+    "release:upload": "npm run build:installer && node scripts/release.cjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -31,6 +38,7 @@
     "mime-types": "^2.1.35",
     "multer": "^1.4.5-lts.1",
     "node-html-to-image": "^4.0.0",
+    "node-machine-id": "^1.1.12",
     "nodemailer": "^6.9.9",
     "p-limit": "^4.0.0",
     "proxy-agent": "^6.3.1",
@@ -46,7 +54,8 @@
     "electron": "^33.3.1",
     "electron-builder": "^25.0.0",
     "jimp": "^1.6.0",
-    "png-to-ico": "^3.0.1"
+    "png-to-ico": "^3.0.1",
+    "vitest": "^4.1.4"
   },
   "build": {
     "appId": "com.mailflow.desktop",
@@ -100,9 +109,9 @@
     "publish": [
       {
         "provider": "generic",
-        "url": "https://github.com/johnkorey/mailflow-desktop/releases/latest/download",
+        "url": "https://mailflow.zeabur.app/updates/latest",
         "channel": "latest",
-        "useMultipleRangeRequest": false
+        "useMultipleRangeRequest": true
       }
     ],
     "asar": true
