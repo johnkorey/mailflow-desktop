@@ -16,12 +16,17 @@ const activeSessions = new Map();
  * Generate a stateless unsubscribe token. Format: base64url(payload).hmac
  * Payload = "userId:campaignId:emailLower". HMAC verifies authenticity.
  * The /u/:token route can decode this and add to the unsubscribes table.
+ *
+ * The full 256-bit HMAC (43 base64url chars) is emitted — earlier builds
+ * truncated to 16 chars (~96 bits) which is short of modern forgery budgets.
+ * The /u/:token verifier accepts BOTH the full HMAC and the legacy 16-char
+ * prefix, so already-sent links in recipients' inboxes continue to work.
  */
 function makeUnsubscribeToken(userId, campaignId, email) {
     const payload = `${userId}:${campaignId || 0}:${(email || '').toLowerCase().trim()}`;
     const encoded = Buffer.from(payload).toString('base64url');
     const secret = process.env.ENCRYPTION_KEY || 'unsubscribe-fallback-key';
-    const sig = crypto.createHmac('sha256', secret).update(encoded).digest('base64url').substring(0, 16);
+    const sig = crypto.createHmac('sha256', secret).update(encoded).digest('base64url');
     return `${encoded}.${sig}`;
 }
 

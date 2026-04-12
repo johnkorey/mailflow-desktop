@@ -16,6 +16,30 @@ import { unsubscribeDb } from '../database/db.mjs';
 const router = Router();
 
 /**
+ * HTML-escape a string before embedding it in the confirmation page.
+ * Recipient emails come from an attacker-controlled HMAC payload — even
+ * though we verify the signature, an attacker with a valid list entry can
+ * inject HTML/JS unless we escape. Defense in depth.
+ */
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+}
+
+/**
+ * Constant-time string compare. Returns false on length mismatch without
+ * leaking via short-circuit; uses crypto.timingSafeEqual on the common path.
+ */
+function safeCompare(a, b) {
+    if (typeof a !== 'string' || typeof b !== 'string') return false;
+    const ab = Buffer.from(a);
+    const bb = Buffer.from(b);
+    if (ab.length !== bb.length) return false;
+    return crypto.timingSafeEqual(ab, bb);
+}
+
+/**
  * Decode and verify a token. Returns { userId, campaignId, email } or null.
  */
 function verifyToken(token) {
@@ -25,8 +49,13 @@ function verifyToken(token) {
     const [encoded, sig] = parts;
 
     const secret = process.env.ENCRYPTION_KEY || 'unsubscribe-fallback-key';
-    const expectedSig = crypto.createHmac('sha256', secret).update(encoded).digest('base64url').substring(0, 16);
-    if (sig !== expectedSig) return null;
+    // Full 43-char HMAC (256 bits base64url) — the old 16-char truncation
+    // only had ~96 bits of entropy, well below modern forgery budgets.
+    const expectedSig = crypto.createHmac('sha256', secret).update(encoded).digest('base64url');
+    // Constant-time compare. Also accepts the legacy 16-char prefix so
+    // unsubscribe links already in recipients' inboxes keep working.
+    const legacyPrefix = expectedSig.substring(0, 16);
+    if (!safeCompare(sig, expectedSig) && !safeCompare(sig, legacyPrefix)) return null;
 
     let payload;
     try {
@@ -47,8 +76,12 @@ function verifyToken(token) {
 function renderConfirmationPage(email, status) {
     const isSuccess = status === 'success';
     const title = isSuccess ? 'You have been unsubscribed' : 'Unsubscribe failed';
+    // Escape the email before embedding in HTML. Even though the token is
+    // HMAC-signed, defense-in-depth: never interpolate recipient-controlled
+    // strings into an HTML response unescaped.
+    const safeEmail = escapeHtml(email);
     const message = isSuccess
-        ? `<strong>${email}</strong> will no longer receive emails from this sender.`
+        ? `<strong>${safeEmail}</strong> will no longer receive emails from this sender.`
         : 'The unsubscribe link is invalid or has expired. Please contact the sender directly.';
     const accent = isSuccess ? '#10b981' : '#ef4444';
 

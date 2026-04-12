@@ -15,6 +15,7 @@ import sendRoutes from './routes/send.mjs';
 import inboxFinderRoutes from './routes/inbox-finder.mjs';
 import uploadRoutes from './routes/upload.mjs';
 import unsubscribeRoutes from './routes/unsubscribe.mjs';
+import { errorMiddleware } from './middleware/error-handler.mjs';
 // TODO: Uncomment after MVP to enable license gating
 // import licenseRoutes from './routes/license.mjs';
 
@@ -61,11 +62,10 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'app.html'));
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-});
+// Terminal error handler — must be the LAST middleware. Handles HttpError
+// throws from routes, bad JSON bodies, SQLite constraint violations, and
+// anything uncaught. See middleware/error-handler.mjs for the contract.
+app.use(errorMiddleware);
 
 // Start server — retry if port is temporarily unavailable (TIME_WAIT)
 function startServer(retries = 5) {
