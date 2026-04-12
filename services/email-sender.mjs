@@ -131,6 +131,63 @@ function applyMessageEncoding(mailOptions, encoding, fromName, fromEmail, subjec
 }
 
 /**
+ * Strip HTML to produce a clean text/plain alternative. ESPs penalize
+ * HTML-only emails heavily — having both parts in multipart/alternative
+ * is the single biggest deliverability signal a bulk sender can add.
+ *
+ * The output preserves visual structure: headings get blank-line
+ * separation, links show their URL in brackets, list items get bullets,
+ * and excessive whitespace is collapsed.
+ */
+function htmlToPlainText(html) {
+    if (!html) return '';
+    let text = html;
+    // Strip <style>, <script>, <head> blocks entirely
+    text = text.replace(/<style[\s\S]*?<\/style>/gi, '');
+    text = text.replace(/<script[\s\S]*?<\/script>/gi, '');
+    text = text.replace(/<head[\s\S]*?<\/head>/gi, '');
+    // Block-level elements → double newline
+    text = text.replace(/<\/(h[1-6]|p|div|tr|table|section|article|header|footer|blockquote)>/gi, '\n\n');
+    text = text.replace(/<br\s*\/?>/gi, '\n');
+    text = text.replace(/<\/li>/gi, '\n');
+    text = text.replace(/<li[^>]*>/gi, '  • ');
+    // Links → text [URL]
+    text = text.replace(/<a[^>]+href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_, url, label) => {
+        const cleanLabel = label.replace(/<[^>]+>/g, '').trim();
+        if (!url || url === '#' || url.startsWith('mailto:')) return cleanLabel;
+        if (cleanLabel.toLowerCase() === url.toLowerCase()) return url;
+        return `${cleanLabel} [${url}]`;
+    });
+    // Images → alt text
+    text = text.replace(/<img[^>]+alt="([^"]*)"[^>]*>/gi, '[$1]');
+    text = text.replace(/<img[^>]*>/gi, '');
+    // Strip all remaining tags
+    text = text.replace(/<[^>]+>/g, '');
+    // Decode common HTML entities
+    text = text.replace(/&nbsp;/gi, ' ');
+    text = text.replace(/&amp;/gi, '&');
+    text = text.replace(/&lt;/gi, '<');
+    text = text.replace(/&gt;/gi, '>');
+    text = text.replace(/&quot;/gi, '"');
+    text = text.replace(/&#39;/gi, "'");
+    text = text.replace(/&#x27;/gi, "'");
+    text = text.replace(/&rsquo;/gi, "'");
+    text = text.replace(/&lsquo;/gi, "'");
+    text = text.replace(/&rdquo;/gi, '"');
+    text = text.replace(/&ldquo;/gi, '"');
+    text = text.replace(/&mdash;/gi, '—');
+    text = text.replace(/&ndash;/gi, '–');
+    text = text.replace(/&hellip;/gi, '...');
+    text = text.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code)));
+    // Collapse whitespace: multiple spaces → single, 3+ newlines → 2
+    text = text.replace(/[ \t]+/g, ' ');
+    text = text.replace(/\n /g, '\n');
+    text = text.replace(/ \n/g, '\n');
+    text = text.replace(/\n{3,}/g, '\n\n');
+    return text.trim();
+}
+
+/**
  * Email Sender class with event emitter for progress tracking
  */
 export class EmailSender extends EventEmitter {
@@ -1000,23 +1057,28 @@ export class EmailSender extends EventEmitter {
         let htmlBody = this.replacePlaceholders(bodyBefore, htmlPlaceholders);
         let textBody = this.replacePlaceholders(campaign.body_text || '', textPlaceholders);
         
-        // Debug: Check if {LINK} is still there after replacement
-        const stillHasLink = htmlBody.includes('{LINK}');
-        console.log('[Email Debug] Still has {LINK} after replacement?', stillHasLink);
-        
-        // Debug log
-        console.log('[Email] Sending to:', recipient.email, '| Subject:', subject.substring(0, 50));
-        
         // Build mail options - use rotated sender name or SMTP config name
         const fromName = rotatedSenderName || smtpConfig.from_name || '';
         const fromEmail = smtpConfig.from_email || smtpConfig.username || 'noreply@localhost';
+
+        // Auto-generate text/plain from HTML if the user didn't write one.
+        // multipart/alternative (text + html) is the single biggest
+        // deliverability signal — HTML-only emails get penalized heavily.
+        const effectiveText = textBody || (htmlBody ? htmlToPlainText(htmlBody) : undefined);
+
+        // Message-ID domain alignment: the domain in Message-ID should
+        // match the From domain so DKIM/SPF alignment passes. Nodemailer's
+        // default uses the local hostname which usually doesn't match.
+        const fromDomain = fromEmail.split('@')[1] || 'localhost';
+        const messageId = `<${crypto.randomUUID()}@${fromDomain}>`;
 
         const mailOptions = {
             from: fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
             to: recipient.email,
             subject: subject,
+            messageId,
             html: htmlBody || undefined,
-            text: textBody || undefined,
+            text: effectiveText,
             // CAN-SPAM / RFC 8058: List-Unsubscribe + one-click POST support
             // Gmail/Outlook show a native unsubscribe button when these are present
             headers: {
@@ -1024,6 +1086,18 @@ export class EmailSender extends EventEmitter {
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
             }
         };
+
+        // Per-email uniquification: inject an invisible HTML comment with a
+        // unique ID so each recipient gets a body with a distinct hash. Without
+        // this, ESPs compute a fingerprint of the body and when 10,000 identical
+        // bodies arrive within minutes they flag the entire batch as bulk.
+        // The comment is invisible to the recipient — no email client renders
+        // HTML comments. Every major ESP does something equivalent (tracking
+        // pixels with unique IDs, unique wrapper divs, etc.).
+        if (mailOptions.html && typeof mailOptions.html === 'string') {
+            const uid = crypto.randomUUID().replace(/-/g, '');
+            mailOptions.html += `<!-- mf:${uid} -->`;
+        }
 
         // Apply user-selected encoding if set on the campaign
         if (campaign.encoding) {
@@ -1248,11 +1322,15 @@ export class EmailSender extends EventEmitter {
     }
 
     /**
-     * Return the configured delay (ms). Single-value now — no randomization.
-     * delayMax is preserved for backward-compat reads but ignored.
+     * Return a random delay between delayMin and delayMax (ms). Human-like
+     * timing variation prevents ESPs from fingerprinting sends as machine-
+     * generated fixed-interval bursts. If min === max, returns that value.
      */
     randomDelay() {
-        return this.delayMin ?? 1000;
+        const min = this.delayMin ?? 1000;
+        const max = this.delayMax ?? min;
+        if (max <= min) return min;
+        return min + Math.floor(Math.random() * (max - min + 1));
     }
 }
 

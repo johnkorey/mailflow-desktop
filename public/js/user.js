@@ -3180,6 +3180,14 @@ async function loadSendingSettings() {
     document.getElementById('settingsThreads').value = s.threads ?? 1;
     const delayInput = document.getElementById('settingsDelay');
     if (delayInput) delayInput.value = s.delay_min ?? 1000;
+    // Show the delay-max field if min !== max (randomization was previously enabled)
+    const hasRandomDelay = (s.delay_max ?? s.delay_min ?? 1000) !== (s.delay_min ?? 1000);
+    const randomizeCheckbox = document.getElementById('settingsRandomizeDelay');
+    if (randomizeCheckbox) randomizeCheckbox.checked = hasRandomDelay;
+    const delayMaxGroup = document.getElementById('settingsDelayMaxGroup');
+    if (delayMaxGroup) delayMaxGroup.style.display = hasRandomDelay ? 'block' : 'none';
+    const delayMaxInput = document.getElementById('settingsDelayMax');
+    if (delayMaxInput) delayMaxInput.value = s.delay_max ?? 3000;
     document.getElementById('settingsRetryFailed').checked = !!s.retry_failed;
     document.getElementById('settingsUseProxy').checked = !!s.use_proxy;
 }
@@ -3189,14 +3197,15 @@ async function saveSendingSettings(e) {
     try {
         const delay = parseInt(document.getElementById('settingsDelay').value);
         const threads = parseInt(document.getElementById('settingsThreads').value);
+        const randomize = document.getElementById('settingsRandomizeDelay').checked;
+        const delayMax = randomize ? parseInt(document.getElementById('settingsDelayMax').value) : delay;
         const retry_failed = document.getElementById('settingsRetryFailed').checked;
         const use_proxy = document.getElementById('settingsUseProxy').checked;
 
         const payload = {
             threads: isNaN(threads) ? 1 : threads,
-            // Backend still has separate delay_min/delay_max columns — send the same value to both
             delay_min: isNaN(delay) ? 0 : delay,
-            delay_max: isNaN(delay) ? 0 : delay,
+            delay_max: isNaN(delayMax) ? (isNaN(delay) ? 0 : delay) : delayMax,
             retry_failed,
             use_proxy
         };

@@ -1422,7 +1422,9 @@ body.has-bg-image .item-card{
                     <div class="card-body">
                         <form id="sendingSettingsForm">
                             <div class="form-group"><label class="form-label" for="settingsThreads">Threads (Parallel)</label><input type="number" class="form-input" id="settingsThreads" value="1" min="1" max="10"><p class="form-hint">Emails sent in parallel</p></div>
-                            <div class="form-group"><label class="form-label" for="settingsDelay">Delay (ms)</label><input type="number" class="form-input" id="settingsDelay" value="1000" min="0"><p class="form-hint">Delay between sends / between threaded waves</p></div>
+                            <div class="form-group"><label class="form-label" for="settingsDelay">Delay Min (ms)</label><input type="number" class="form-input" id="settingsDelay" value="1000" min="0"><p class="form-hint">Minimum delay between sends</p></div>
+                            <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="settingsRandomizeDelay" onchange="document.getElementById('settingsDelayMaxGroup').style.display=this.checked?'block':'none'"> Randomize delay (human-like timing)</label></div>
+                            <div class="form-group" id="settingsDelayMaxGroup" style="display:none"><label class="form-label" for="settingsDelayMax">Delay Max (ms)</label><input type="number" class="form-input" id="settingsDelayMax" value="3000" min="0"><p class="form-hint">Each send waits a random time between min and max — prevents ESPs from detecting fixed-interval machine patterns</p></div>
                             <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="settingsRetryFailed"> Retry Failed Emails</label></div>
                             <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="settingsUseProxy"> Use Proxy</label></div>
                             <button type="button" class="btn btn-primary" onclick="saveSendingSettings()">Save Settings</button>
