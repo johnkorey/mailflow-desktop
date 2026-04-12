@@ -7,8 +7,9 @@ IMPORTANT — READ CAREFULLY BEFORE INSTALLING.
 
 This Software License Agreement and User Responsibility Disclaimer (the
 "Agreement") is a binding legal contract between you (either an individual
-or a single legal entity, "You" or "User") and MailFlow ("the Publisher",
-"We", "Us") for the MailFlow 2.0 software product, including any associated
+or a single legal entity, "You" or "User") and Inbox4Sure, operating from
+Accra, Ghana ("the Publisher", "We", "Us") for the MailFlow 2.0 software
+product, including any associated
 media, printed materials, documentation, online services, and software
 updates (collectively, "the Software").
 
@@ -370,17 +371,17 @@ termination of this Agreement.
 ================================================================================
 
 This Agreement shall be governed by and construed in accordance with
-the laws of [INSERT GOVERNING-LAW JURISDICTION — e.g. State of Delaware,
-USA], without regard to its conflict of law provisions. Any dispute,
-claim, or controversy arising out of or relating to this Agreement, or
-the breach, termination, enforcement, interpretation, or validity
-thereof, shall be resolved exclusively through binding individual
-arbitration administered by the American Arbitration Association (AAA)
-under its Commercial Arbitration Rules, with the seat of arbitration
-in [INSERT SEAT — e.g. Wilmington, Delaware]. Either party may seek
-injunctive or other equitable relief in any court of competent
-jurisdiction to protect intellectual property rights, and either party
-may bring qualifying claims in small-claims court if available.
+the laws of the Republic of Ghana, without regard to its conflict of
+law provisions. Any dispute, claim, or controversy arising out of or
+relating to this Agreement, or the breach, termination, enforcement,
+interpretation, or validity thereof, shall be resolved exclusively
+through binding individual arbitration administered by the Ghana
+Arbitration Centre under its Arbitration Rules, with the seat of
+arbitration in Accra, Ghana. Either party may seek injunctive or other
+equitable relief in any court of competent jurisdiction in Accra to
+protect intellectual property rights, and either party may bring
+qualifying claims in the appropriate Ghanaian court of first instance
+if available.
 
 YOU AGREE THAT ANY DISPUTE RESOLUTION PROCEEDINGS WILL BE CONDUCTED ONLY
 ON AN INDIVIDUAL BASIS AND NOT IN A CLASS, CONSOLIDATED, OR
@@ -413,8 +414,12 @@ update mechanism.
 17. CONTACT
 ================================================================================
 
-For questions about this License Agreement, contact support through the
-official MailFlow support channels.
+For questions about this License Agreement, contact:
+
+  Inbox4Sure
+  Accra, Ghana
+  Email: support@inbox4sure.com
+  Web:   https://inbox4sure.com
 
 
 ================================================================================
