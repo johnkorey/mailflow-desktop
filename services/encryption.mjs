@@ -4,14 +4,22 @@ import path from 'path';
 import os from 'os';
 
 /**
- * Resolve the encryption key:
- *   1. Use ENCRYPTION_KEY env var if set (production/custom deployments)
- *   2. Otherwise, read from persisted key file in the user data dir
- *   3. Otherwise, generate a new random key, persist it, and use it
+ * Encryption at rest for SMTP passwords and API keys.
  *
- * This eliminates the "insecure dev key" fallback — every install gets a
- * unique 64-char hex key that survives restarts.
+ * Format (current): "gcm:<iv-hex>:<tag-hex>:<ciphertext-hex>"
+ *   - AES-256-GCM with a random 12-byte IV and 16-byte auth tag.
+ *   - Tampering with the ciphertext is detected at decrypt time.
+ *
+ * Backward compatibility:
+ *   - Legacy "iv-hex:ciphertext-hex" format (AES-256-CBC, unauthenticated)
+ *     still decrypts via the CBC fallback. Old records from pre-GCM
+ *     builds keep working — the first successful decrypt can be
+ *     re-encrypted with reencryptIfLegacy() to migrate them in place.
+ *   - The hardcoded legacy dev key used by the original pre-auto-key
+ *     builds is also accepted during CBC decrypt, so SMTP passwords
+ *     saved in the very first releases still survive an upgrade.
  */
+
 function resolveEncryptionKey() {
     if (process.env.ENCRYPTION_KEY) {
         return process.env.ENCRYPTION_KEY;
@@ -48,83 +56,118 @@ function resolveEncryptionKey() {
 }
 
 const ENCRYPTION_KEY = resolveEncryptionKey();
-// Legacy key used by old builds before auto-generation was added.
-// Kept here so existing encrypted SMTP passwords can still be decrypted after
-// upgrading. The migration in db.mjs re-encrypts them with the new key.
+// Legacy key used by the very first MailFlow builds before auto-key
+// generation was added. Kept so an upgrade from pre-auto-key builds can
+// still decrypt saved SMTP passwords. Only used in the CBC fallback path.
 const LEGACY_DEV_KEY = 'dev-insecure-key-change-me!!!';
-const IV_LENGTH = 16;
-const ALGORITHM = 'aes-256-cbc';
 
-function makeKey(str) {
-    return Buffer.from(str.padEnd(32).slice(0, 32));
+const GCM_ALGORITHM = 'aes-256-gcm';
+const CBC_ALGORITHM = 'aes-256-cbc';
+const GCM_IV_BYTES = 12;      // NIST SP 800-38D recommendation
+const CBC_IV_BYTES = 16;
+
+/** Derive a 32-byte key from a passphrase via SHA-256. */
+function deriveKey(passphrase) {
+    return crypto.createHash('sha256').update(String(passphrase)).digest();
 }
 
 /**
- * Encrypt a string
- * @param {string} text - Text to encrypt
- * @returns {string} - Encrypted text (iv:encrypted format)
+ * Encrypt a string with AES-256-GCM.
+ * Output: "gcm:<iv-hex>:<tag-hex>:<ciphertext-hex>"
  */
 export function encrypt(text) {
-    if (!text) return null;
+    if (text === null || text === undefined) return null;
+    const plaintext = String(text);
+    if (plaintext === '') return null;
 
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv(ALGORITHM, makeKey(ENCRYPTION_KEY), iv);
-
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-
-    return iv.toString('hex') + ':' + encrypted;
+    const key = deriveKey(ENCRYPTION_KEY);
+    const iv = crypto.randomBytes(GCM_IV_BYTES);
+    const cipher = crypto.createCipheriv(GCM_ALGORITHM, key, iv);
+    const enc = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return `gcm:${iv.toString('hex')}:${tag.toString('hex')}:${enc.toString('hex')}`;
 }
 
-function tryDecrypt(encryptedText, keyString) {
+/** Try GCM decrypt. Throws on auth failure. */
+function decryptGcm(encryptedText) {
     const parts = encryptedText.split(':');
-    if (parts.length !== 2) {
-        throw new Error('Invalid encrypted text format');
+    if (parts.length !== 4 || parts[0] !== 'gcm') {
+        throw new Error('Not a GCM ciphertext');
     }
+    const iv = Buffer.from(parts[1], 'hex');
+    const tag = Buffer.from(parts[2], 'hex');
+    const ct = Buffer.from(parts[3], 'hex');
+    const key = deriveKey(ENCRYPTION_KEY);
+    const decipher = crypto.createDecipheriv(GCM_ALGORITHM, key, iv);
+    decipher.setAuthTag(tag);
+    const dec = Buffer.concat([decipher.update(ct), decipher.final()]);
+    return dec.toString('utf8');
+}
+
+/**
+ * Legacy CBC decrypt. Format is "iv-hex:ciphertext-hex". The CBC key derive
+ * matches the original makeKey() — ASCII-pad the passphrase to 32 bytes,
+ * which is what older builds wrote to disk with.
+ */
+function makeCbcKeyLegacy(str) {
+    return Buffer.from(String(str).padEnd(32).slice(0, 32));
+}
+function decryptCbc(encryptedText, passphrase) {
+    const parts = encryptedText.split(':');
+    if (parts.length !== 2) throw new Error('Not a CBC ciphertext');
     const iv = Buffer.from(parts[0], 'hex');
-    const encrypted = parts[1];
-    const decipher = crypto.createDecipheriv(ALGORITHM, makeKey(keyString), iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    if (iv.length !== CBC_IV_BYTES) throw new Error('CBC IV length wrong');
+    const key = makeCbcKeyLegacy(passphrase);
+    const decipher = crypto.createDecipheriv(CBC_ALGORITHM, key, iv);
+    let decrypted = decipher.update(parts[1], 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
 }
 
 /**
- * Decrypt a string. Transparently falls back to the legacy dev key so
- * existing SMTP passwords from pre-auto-key builds continue to work.
+ * Decrypt a string. Tries GCM first (modern format), falls back to legacy
+ * CBC with the current key, then legacy CBC with the pre-auto-key dev key.
+ * All failures result in the original GCM error being thrown, so callers
+ * see a single, stable error shape.
  */
 export function decrypt(encryptedText) {
     if (!encryptedText) return null;
 
+    // Modern path: GCM
+    if (typeof encryptedText === 'string' && encryptedText.startsWith('gcm:')) {
+        return decryptGcm(encryptedText);
+    }
+
+    // Legacy path: CBC with current key, then CBC with the pre-auto-key dev key.
+    let firstErr = null;
     try {
-        return tryDecrypt(encryptedText, ENCRYPTION_KEY);
-    } catch (primaryErr) {
-        // Fall back to the legacy dev key for backward compatibility
-        try {
-            return tryDecrypt(encryptedText, LEGACY_DEV_KEY);
-        } catch {
-            throw primaryErr;
-        }
+        return decryptCbc(encryptedText, ENCRYPTION_KEY);
+    } catch (e) {
+        firstErr = e;
+    }
+    try {
+        return decryptCbc(encryptedText, LEGACY_DEV_KEY);
+    } catch {
+        throw firstErr;
     }
 }
 
 /**
- * Re-encrypt a value if it was encrypted with the legacy dev key.
- * Returns the new ciphertext, or null if the value was already encrypted
- * with the current key (no re-encryption needed).
+ * Re-encrypt a value if it was written by a pre-GCM build (or with the
+ * legacy dev key). Returns the new GCM ciphertext, or null if the value
+ * is already current and no re-encryption is needed.
  */
 export function reencryptIfLegacy(encryptedText) {
     if (!encryptedText) return null;
-    try {
-        tryDecrypt(encryptedText, ENCRYPTION_KEY);
+    if (typeof encryptedText === 'string' && encryptedText.startsWith('gcm:')) {
         return null; // already current
+    }
+    try {
+        const plain = decrypt(encryptedText);
+        if (plain == null) return null;
+        return encrypt(plain);
     } catch {
-        try {
-            const plain = tryDecrypt(encryptedText, LEGACY_DEV_KEY);
-            return encrypt(plain);
-        } catch {
-            return null; // can't decrypt with either key — leave alone
-        }
+        return null; // unreadable with any key — leave alone
     }
 }
 
@@ -142,6 +185,5 @@ export function generateToken(length = 32) {
  * @returns {string} - Random MD5 hash
  */
 export function generateRandomMD5() {
-    return crypto.createHash('md5').update(Math.random().toString()).digest('hex');
+    return crypto.createHash('md5').update(crypto.randomBytes(16)).digest('hex');
 }
-

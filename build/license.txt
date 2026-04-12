@@ -1,6 +1,6 @@
 MAILFLOW 2.0 SOFTWARE LICENSE AGREEMENT AND USER RESPONSIBILITY DISCLAIMER
 
-Last updated: 2026
+Last updated: 11 April 2026
 
 
 IMPORTANT — READ CAREFULLY BEFORE INSTALLING.
@@ -75,12 +75,22 @@ You shall NOT, under any circumstances, use the Software to:
     of malicious code;
   • Conduct phishing, credential theft, identity theft, social
     engineering, business email compromise (BEC), or any related fraud;
+  • Send, transmit, store, link to, or in any way facilitate child
+    sexual abuse material (CSAM), the sexual exploitation of minors,
+    grooming, or any content that endangers children. This prohibition
+    is absolute and admits no exception. Suspected CSAM activity will
+    be reported to the National Center for Missing & Exploited Children
+    (NCMEC) and to applicable law enforcement;
+  • Scrape, harvest, purchase, rent, or otherwise acquire email
+    addresses without explicit, informed, opt-in consent from each
+    individual on the list, or use the Software with any list so
+    obtained;
   • Send messages that promote, facilitate, or are connected to:
         - illegal goods or services
         - controlled substances or prescription medications without
           proper authorization
         - firearms, weapons, or ammunition in violation of law
-        - human trafficking, sexual exploitation, or child endangerment
+        - human trafficking or sexual exploitation
         - terrorism, violent extremism, or incitement of violence
         - pyramid schemes, Ponzi schemes, or other financial fraud
         - investment scams, cryptocurrency rug pulls, or unregistered
@@ -142,8 +152,21 @@ to:
   (f) Any claim that Your use of the Software caused damage to a third
       party.
 
+The Publisher reserves the right, at its own expense, to assume the
+exclusive defense and control of any matter otherwise subject to
+indemnification by You, in which event You will fully cooperate with
+the Publisher in asserting any available defenses. You will not settle
+any matter affecting the Publisher without the Publisher's prior
+written consent.
+
 This indemnification obligation will survive termination of this
 Agreement and Your use of the Software.
+
+You further represent and warrant that You are at least 18 years of
+age (or the age of legal majority in Your jurisdiction, whichever is
+greater), have the legal capacity to enter into this Agreement, and
+are not barred from receiving the Software under the laws of the
+United States or any other applicable jurisdiction.
 
 ================================================================================
 4. NO MONITORING — TOOL PROVIDER STATUS
@@ -199,7 +222,8 @@ or its users without prior notification.
 
 The Software stores Your campaigns, recipient lists, SMTP credentials,
 sending history, and related data LOCALLY on Your device only. SMTP
-passwords and API keys are encrypted at rest using AES-256-CBC. The
+passwords and API keys are encrypted at rest using authenticated
+AES-256 encryption (AES-256-GCM) with a per-installation key. The
 Software does NOT transmit Your contact lists, campaign content,
 recipient data, or message contents to any external server operated by
 the Publisher, except for the periodic license validation check with the
@@ -285,6 +309,14 @@ EXCEED THE LESSER OF (A) THE AMOUNT YOU PAID THE PUBLISHER FOR THE
 SOFTWARE LICENSE IN THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING
 RISE TO THE CLAIM, OR (B) FIFTY UNITED STATES DOLLARS ($50.00 USD).
 
+NOTHING IN THIS AGREEMENT EXCLUDES OR LIMITS THE PUBLISHER'S LIABILITY
+FOR (A) FRAUD OR FRAUDULENT MISREPRESENTATION, (B) DEATH OR PERSONAL
+INJURY CAUSED BY THE PUBLISHER'S NEGLIGENCE, (C) GROSS NEGLIGENCE OR
+WILLFUL MISCONDUCT, OR (D) ANY OTHER LIABILITY THAT CANNOT BE EXCLUDED
+OR LIMITED UNDER APPLICABLE LAW. THE LIMITATIONS AND EXCLUSIONS IN THIS
+SECTION APPLY ONLY TO THE FULLEST EXTENT PERMITTED BY LAW IN YOUR
+JURISDICTION.
+
 SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OF CERTAIN WARRANTIES OR
 THE LIMITATION OF LIABILITY FOR CERTAIN DAMAGES, SO SOME OF THE ABOVE
 LIMITATIONS MAY NOT APPLY TO YOU. IN SUCH JURISDICTIONS, THE PUBLISHER'S
@@ -337,14 +369,18 @@ termination of this Agreement.
 14. GOVERNING LAW AND DISPUTE RESOLUTION
 ================================================================================
 
-This Agreement shall be governed by and construed in accordance with the
-laws of the jurisdiction in which the Publisher is established, without
-regard to its conflict of law provisions. Any dispute, claim, or
-controversy arising out of or relating to this Agreement, or the breach,
-termination, enforcement, interpretation, or validity thereof, shall be
-resolved exclusively through binding individual arbitration, except that
-either party may seek injunctive or other equitable relief in any court
-of competent jurisdiction to protect intellectual property rights.
+This Agreement shall be governed by and construed in accordance with
+the laws of [INSERT GOVERNING-LAW JURISDICTION — e.g. State of Delaware,
+USA], without regard to its conflict of law provisions. Any dispute,
+claim, or controversy arising out of or relating to this Agreement, or
+the breach, termination, enforcement, interpretation, or validity
+thereof, shall be resolved exclusively through binding individual
+arbitration administered by the American Arbitration Association (AAA)
+under its Commercial Arbitration Rules, with the seat of arbitration
+in [INSERT SEAT — e.g. Wilmington, Delaware]. Either party may seek
+injunctive or other equitable relief in any court of competent
+jurisdiction to protect intellectual property rights, and either party
+may bring qualifying claims in small-claims court if available.
 
 YOU AGREE THAT ANY DISPUTE RESOLUTION PROCEEDINGS WILL BE CONDUCTED ONLY
 ON AN INDIVIDUAL BASIS AND NOT IN A CLASS, CONSOLIDATED, OR

@@ -18,8 +18,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     validateLicense: () => ipcRenderer.invoke('license-validate'),
     deactivateLicense: () => ipcRenderer.invoke('license-deactivate'),
     getLicenseInfo: () => ipcRenderer.invoke('license-get-info'),
+    getMachineId: () => ipcRenderer.invoke('license-get-machine-id'),
     onLicenseStatus: (callback) => {
         ipcRenderer.on('license-status', (event, status) => callback(status));
+    },
+    onLicenseStatusChanged: (callback) => {
+        ipcRenderer.on('license-status-changed', (event, status) => callback(status));
     },
 
     // Auto-Updater
