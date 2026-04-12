@@ -825,7 +825,7 @@ body.has-bg-image .item-card{
     </style>
 </head>
 <body>
-<div class="toast-container" id="toastContainer"></div>
+<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="false" role="status"></div>
 
 <!-- ====== LICENSE ACTIVATION SCREEN ====== -->
 <div id="licenseScreen" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg-base);flex-direction:column;align-items:center;justify-content:center;-webkit-app-region:drag">
@@ -1018,25 +1018,25 @@ body.has-bg-image .item-card{
                         <div class="card-body">
                             <form id="inboxFinderForm">
                                 <div class="form-row">
-                                    <div class="form-group" style="flex:1"><label class="form-label">Test Name</label><input type="text" class="form-input" id="inboxTestName" placeholder="e.g., Company X Test" required></div>
-                                    <div class="form-group" style="flex:1"><label class="form-label">SMTP Server</label><select class="form-input" id="inboxTestSmtp" required><option value="">Select SMTP...</option></select></div>
+                                    <div class="form-group" style="flex:1"><label class="form-label" for="inboxTestName">Test Name</label><input type="text" class="form-input" id="inboxTestName" placeholder="e.g., Company X Test" required></div>
+                                    <div class="form-group" style="flex:1"><label class="form-label" for="inboxTestSmtp">SMTP Server</label><select class="form-input" id="inboxTestSmtp" required><option value="">Select SMTP...</option></select></div>
                                 </div>
                                 <div class="section-box">
                                     <h4>Sender Setup (FROM)</h4>
                                     <div class="form-row">
-                                        <div class="form-group" style="flex:1"><label class="form-label">Usernames (one/line)</label><textarea class="form-input" id="inboxTestUsernames" rows="2" placeholder="john&#10;jane" oninput="updateInboxCombinationsPreview()"></textarea></div>
-                                        <div class="form-group" style="flex:1"><label class="form-label">Domains (one/line)</label><textarea class="form-input" id="inboxTestDomains" rows="2" placeholder="company.com" required oninput="updateInboxCombinationsPreview()"></textarea></div>
+                                        <div class="form-group" style="flex:1"><label class="form-label" for="inboxTestUsernames">Usernames (one/line)</label><textarea class="form-input" id="inboxTestUsernames" rows="2" placeholder="john&#10;jane" oninput="updateInboxCombinationsPreview()"></textarea></div>
+                                        <div class="form-group" style="flex:1"><label class="form-label" for="inboxTestDomains">Domains (one/line)</label><textarea class="form-input" id="inboxTestDomains" rows="2" placeholder="company.com" required oninput="updateInboxCombinationsPreview()"></textarea></div>
                                     </div>
                                     <span id="senderCombinationsPreview" class="form-hint">0 sender combinations</span>
                                 </div>
                                 <div class="section-box">
                                     <h4 style="color:var(--green)">Recipients (TO)</h4>
                                     <div class="form-row">
-                                        <div class="form-group" style="flex:1"><label class="form-label">Source</label><select class="form-input" id="inboxTestRecipientSource" onchange="toggleInboxRecipientInput()"><option value="manual">Manual Entry</option><option value="list">From Saved List</option></select></div>
-                                        <div class="form-group" style="flex:1;display:none" id="inboxRecipientListGroup"><label class="form-label">Select List</label><select class="form-input" id="inboxTestRecipientList" onchange="loadRecipientListEmails()"><option value="">-- Select --</option></select></div>
+                                        <div class="form-group" style="flex:1"><label class="form-label" for="inboxTestRecipientSource">Source</label><select class="form-input" id="inboxTestRecipientSource" onchange="toggleInboxRecipientInput()"><option value="manual">Manual Entry</option><option value="list">From Saved List</option></select></div>
+                                        <div class="form-group" style="flex:1;display:none" id="inboxRecipientListGroup"><label class="form-label" for="inboxTestRecipientList">Select List</label><select class="form-input" id="inboxTestRecipientList" onchange="loadRecipientListEmails()"><option value="">-- Select --</option></select></div>
                                     </div>
-                                    <div id="inboxManualRecipientsGroup"><div class="form-group"><label class="form-label">Emails (one/line)</label><textarea class="form-input" id="inboxTestRecipients" rows="2" placeholder="test@gmail.com&#10;test@outlook.com" oninput="updateInboxCombinationsPreview()"></textarea></div></div>
-                                    <div id="inboxListRecipientsGroup" style="display:none"><div class="form-group"><label class="form-label">Recipients from List</label><textarea class="form-input" id="inboxListRecipientsPreview" rows="2" readonly style="opacity:.7"></textarea></div></div>
+                                    <div id="inboxManualRecipientsGroup"><div class="form-group"><label class="form-label" for="inboxTestRecipients">Emails (one/line)</label><textarea class="form-input" id="inboxTestRecipients" rows="2" placeholder="test@gmail.com&#10;test@outlook.com" oninput="updateInboxCombinationsPreview()"></textarea></div></div>
+                                    <div id="inboxListRecipientsGroup" style="display:none"><div class="form-group"><label class="form-label" for="inboxListRecipientsPreview">Recipients from List</label><textarea class="form-input" id="inboxListRecipientsPreview" rows="2" readonly style="opacity:.7"></textarea></div></div>
                                 </div>
                                 <div class="flex-between">
                                     <span id="combinationsPreview" class="form-hint">0 tests will be sent</span>
@@ -1236,8 +1236,8 @@ body.has-bg-image .item-card{
                     <div class="card-hdr"><h3>Profile</h3></div>
                     <div class="card-body">
                         <form id="accountForm" onsubmit="updateProfile(event)">
-                            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="accountEmail" disabled></div>
-                            <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="accountName" placeholder="Your name"></div>
+                            <div class="form-group"><label class="form-label" for="accountEmail">Email</label><input type="email" class="form-input" id="accountEmail" disabled></div>
+                            <div class="form-group"><label class="form-label" for="accountName">Name</label><input type="text" class="form-input" id="accountName" placeholder="Your name"></div>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </form>
                     </div>
@@ -1284,7 +1284,7 @@ body.has-bg-image .item-card{
                         <p class="form-hint mb-sm" id="bgStatusLabel" style="font-weight:500;color:var(--text-secondary)">Using the built-in MailFlow wallpaper</p>
 
                         <div class="form-group">
-                            <label class="form-label">Upload your own image</label>
+                            <label class="form-label" for="bgImageInput">Upload your own image</label>
                             <input type="file" id="bgImageInput" accept="image/*" class="form-input" onchange="handleBackgroundImageUpload(event)">
                             <p class="form-hint">Max size: 3 MB. Supported: JPG, PNG, WEBP, SVG.</p>
                         </div>
@@ -1421,8 +1421,8 @@ body.has-bg-image .item-card{
                     <div class="card-hdr"><h3>Sending Settings</h3></div>
                     <div class="card-body">
                         <form id="sendingSettingsForm">
-                            <div class="form-group"><label class="form-label">Threads (Parallel)</label><input type="number" class="form-input" id="settingsThreads" value="1" min="1" max="10"><p class="form-hint">Emails sent in parallel</p></div>
-                            <div class="form-group"><label class="form-label">Delay (ms)</label><input type="number" class="form-input" id="settingsDelay" value="1000" min="0"><p class="form-hint">Delay between sends / between threaded waves</p></div>
+                            <div class="form-group"><label class="form-label" for="settingsThreads">Threads (Parallel)</label><input type="number" class="form-input" id="settingsThreads" value="1" min="1" max="10"><p class="form-hint">Emails sent in parallel</p></div>
+                            <div class="form-group"><label class="form-label" for="settingsDelay">Delay (ms)</label><input type="number" class="form-input" id="settingsDelay" value="1000" min="0"><p class="form-hint">Delay between sends / between threaded waves</p></div>
                             <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="settingsRetryFailed"> Retry Failed Emails</label></div>
                             <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="settingsUseProxy"> Use Proxy</label></div>
                             <button type="button" class="btn btn-primary" onclick="saveSendingSettings()">Save Settings</button>
@@ -1435,8 +1435,8 @@ body.has-bg-image .item-card{
                         <p class="form-hint mb-md">Automatically send test emails to your inbox during a campaign so you can monitor whether your messages are still landing in the inbox.</p>
                         <form id="deliverabilityForm">
                             <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="testEnabled"> Enable Deliverability Testing</label></div>
-                            <div class="form-group"><label class="form-label">Test Email Address</label><input type="email" class="form-input" id="testEmail" placeholder="you@yourdomain.com"><p class="form-hint">Where the test emails are delivered</p></div>
-                            <div class="form-group"><label class="form-label">Test Interval</label><input type="number" class="form-input" id="testInterval" value="50" min="10"><p class="form-hint">Send a test email every N successful sends</p></div>
+                            <div class="form-group"><label class="form-label" for="testEmail">Test Email Address</label><input type="email" class="form-input" id="testEmail" placeholder="you@yourdomain.com"><p class="form-hint">Where the test emails are delivered</p></div>
+                            <div class="form-group"><label class="form-label" for="testInterval">Test Interval</label><input type="number" class="form-input" id="testInterval" value="50" min="10"><p class="form-hint">Send a test email every N successful sends</p></div>
                             <div class="btn-row">
                                 <button type="button" class="btn btn-primary" onclick="saveDeliverabilitySettings()">Save</button>
                                 <button type="button" class="btn btn-secondary" onclick="sendManualTestEmail()">Send Test Now</button>
@@ -1475,10 +1475,10 @@ body.has-bg-image .item-card{
                     <div>
                         <h4 class="mb-sm" style="color:var(--text);font-size:13px">Campaign Details</h4>
                         <input type="hidden" id="campaignName" value="">
-                        <div class="form-group"><label class="form-label">SMTP Server(s) *</label><select class="form-input" id="smtpIdsSelect" multiple style="min-height:80px" onchange="toggleSmtpRotationType()"></select><p class="form-hint">Hold Ctrl to select multiple</p></div>
-                        <div class="form-group" id="smtpRotationTypeGroup" style="display:none"><label class="form-label">SMTP Rotation Type</label><select class="form-input" id="smtpRotationType"><option value="round_robin">Round Robin (cycle per email)</option><option value="batch">Instantly (all SMTPs at once)</option></select><p class="form-hint">Round Robin: cycles SMTPs per send. Instantly: every wave uses all SMTPs simultaneously.</p></div>
-                        <div class="form-group"><label class="form-label">Subject Line</label><input type="text" class="form-input" id="campaignSubject" placeholder="Your subject line..."></div>
-                        <div class="form-group"><label class="form-label">Reply-To</label><input type="email" class="form-input" id="campaignReplyTo" placeholder="reply@company.com"></div>
+                        <div class="form-group"><label class="form-label" for="smtpIdsSelect">SMTP Server(s) *</label><select class="form-input" id="smtpIdsSelect" multiple style="min-height:80px" onchange="toggleSmtpRotationType()"></select><p class="form-hint">Hold Ctrl to select multiple</p></div>
+                        <div class="form-group" id="smtpRotationTypeGroup" style="display:none"><label class="form-label" for="smtpRotationType">SMTP Rotation Type</label><select class="form-input" id="smtpRotationType"><option value="round_robin">Round Robin (cycle per email)</option><option value="batch">Instantly (all SMTPs at once)</option></select><p class="form-hint">Round Robin: cycles SMTPs per send. Instantly: every wave uses all SMTPs simultaneously.</p></div>
+                        <div class="form-group"><label class="form-label" for="campaignSubject">Subject Line</label><input type="text" class="form-input" id="campaignSubject" placeholder="Your subject line..."></div>
+                        <div class="form-group"><label class="form-label" for="campaignReplyTo">Reply-To</label><input type="email" class="form-input" id="campaignReplyTo" placeholder="reply@company.com"></div>
                         <div class="form-group">
                             <label class="form-label">Recipients *</label>
                             <div class="flex gap-sm mb-sm"><select class="form-input" id="recipientListSelect" onchange="loadRecipientList()" style="flex:1"><option value="">-- Select Saved List --</option></select><button type="button" class="btn btn-secondary btn-sm" onclick="showRecipientListModal()">+ New</button></div>
@@ -1509,9 +1509,9 @@ body.has-bg-image .item-card{
                             <summary style="cursor:pointer;font-weight:600;color:var(--text-3);font-size:12px">Advanced: Content Rotation</summary>
                             <div class="section-box mt-sm" style="margin-bottom:0">
                                 <div class="form-row" style="margin-bottom:0">
-                                    <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">Subject Lines</label><select class="form-input" id="subjectListSelect"><option value="">Use single subject</option></select></div>
-                                    <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">Sender Names</label><select class="form-input" id="senderListSelect"><option value="">SMTP default</option></select></div>
-                                    <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">CTA Links</label><select class="form-input" id="linkListSelect"><option value="">No rotation</option></select></div>
+                                    <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px" for="subjectListSelect">Subject Lines</label><select class="form-input" id="subjectListSelect"><option value="">Use single subject</option></select></div>
+                                    <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px" for="senderListSelect">Sender Names</label><select class="form-input" id="senderListSelect"><option value="">SMTP default</option></select></div>
+                                    <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px" for="linkListSelect">CTA Links</label><select class="form-input" id="linkListSelect"><option value="">No rotation</option></select></div>
                                 </div>
                             </div>
                         </details>
@@ -1559,25 +1559,25 @@ body.has-bg-image .item-card{
         <div class="modal-body">
             <form id="smtpForm">
                 <input type="hidden" id="smtpId">
-                <div class="form-row"><div class="form-group" style="flex:1"><label class="form-label">Provider *</label><select class="form-input" id="smtpProvider" onchange="toggleSmtpProvider()"><option value="smtp">SMTP (Generic)</option><option value="sendgrid">SendGrid</option><option value="mailgun">Mailgun</option><option value="amazon_ses">Amazon SES</option><option value="postmark">Postmark</option><option value="sparkpost">SparkPost</option><option value="gsuite">Google Workspace / Gmail</option></select></div><div class="form-group" style="flex:1"><label class="form-label">Name *</label><input type="text" class="form-input" id="smtpName" placeholder="e.g., Primary SMTP" required></div></div>
+                <div class="form-row"><div class="form-group" style="flex:1"><label class="form-label" for="smtpProvider">Provider *</label><select class="form-input" id="smtpProvider" onchange="toggleSmtpProvider()"><option value="smtp">SMTP (Generic)</option><option value="sendgrid">SendGrid</option><option value="mailgun">Mailgun</option><option value="amazon_ses">Amazon SES</option><option value="postmark">Postmark</option><option value="sparkpost">SparkPost</option><option value="gsuite">Google Workspace / Gmail</option></select></div><div class="form-group" style="flex:1"><label class="form-label" for="smtpName">Name *</label><input type="text" class="form-input" id="smtpName" placeholder="e.g., Primary SMTP" required></div></div>
                 <!-- API Key field (for API providers) -->
-                <div class="form-group" id="smtpApiKeyGroup" style="display:none"><label class="form-label">API Key *</label><input type="password" class="form-input" id="smtpApiKey" placeholder="Enter your API key"></div>
+                <div class="form-group" id="smtpApiKeyGroup" style="display:none"><label class="form-label" for="smtpApiKey">API Key *</label><input type="password" class="form-input" id="smtpApiKey" placeholder="Enter your API key"></div>
                 <!-- Mailgun domain -->
-                <div class="form-row" id="smtpApiDomainGroup" style="display:none"><div class="form-group" style="flex:2"><label class="form-label">Sending Domain *</label><input type="text" class="form-input" id="smtpApiDomain" placeholder="mg.yourdomain.com"></div><div class="form-group" style="flex:1"><label class="form-label">Region</label><select class="form-input" id="smtpApiRegion"><option value="us">US</option><option value="eu">EU</option></select></div></div>
+                <div class="form-row" id="smtpApiDomainGroup" style="display:none"><div class="form-group" style="flex:2"><label class="form-label" for="smtpApiDomain">Sending Domain *</label><input type="text" class="form-input" id="smtpApiDomain" placeholder="mg.yourdomain.com"></div><div class="form-group" style="flex:1"><label class="form-label" for="smtpApiRegion">Region</label><select class="form-input" id="smtpApiRegion"><option value="us">US</option><option value="eu">EU</option></select></div></div>
                 <!-- Region only (for SES, SparkPost) -->
-                <div class="form-group" id="smtpApiRegionOnlyGroup" style="display:none"><label class="form-label" id="smtpApiRegionOnlyLabel">Region</label><select class="form-input" id="smtpApiRegionOnly"><option value="us-east-1">US East (N. Virginia)</option><option value="us-west-2">US West (Oregon)</option><option value="eu-west-1">EU (Ireland)</option><option value="eu-central-1">EU (Frankfurt)</option><option value="ap-south-1">Asia Pacific (Mumbai)</option><option value="ap-southeast-2">Asia Pacific (Sydney)</option></select></div>
+                <div class="form-group" id="smtpApiRegionOnlyGroup" style="display:none"><label class="form-label" id="smtpApiRegionOnlyLabel" for="smtpApiRegionOnly">Region</label><select class="form-input" id="smtpApiRegionOnly"><option value="us-east-1">US East (N. Virginia)</option><option value="us-west-2">US West (Oregon)</option><option value="eu-west-1">EU (Ireland)</option><option value="eu-central-1">EU (Frankfurt)</option><option value="ap-south-1">Asia Pacific (Mumbai)</option><option value="ap-southeast-2">Asia Pacific (Sydney)</option></select></div>
                 <!-- SMTP host/port (for generic SMTP) -->
                 <div id="smtpHostGroup">
-                    <div class="form-row"><div class="form-group" style="flex:2"><label class="form-label">Host *</label><input type="text" class="form-input" id="smtpHost" placeholder="smtp.example.com" required></div><div class="form-group" style="flex:1"><label class="form-label">Port *</label><input type="number" class="form-input" id="smtpPort" value="587" required></div></div>
+                    <div class="form-row"><div class="form-group" style="flex:2"><label class="form-label" for="smtpHost">Host *</label><input type="text" class="form-input" id="smtpHost" placeholder="smtp.example.com" required></div><div class="form-group" style="flex:1"><label class="form-label" for="smtpPort">Port *</label><input type="number" class="form-input" id="smtpPort" value="587" required></div></div>
                 </div>
                 <!-- Auth type / encryption (for SMTP mode) -->
                 <div id="smtpAuthRow">
-                    <div class="form-row"><div class="form-group" style="flex:1"><label class="form-label">Auth Type</label><select class="form-input" id="smtpAuthType" onchange="toggleSmtpAuth()"><option value="login">Username & Password</option><option value="none">None (IP Authenticated)</option><option value="api-key">API Key</option><option value="oauth2">OAuth2</option></select></div><div class="form-group" style="flex:1"><label class="form-label">Encryption</label><select class="form-input" id="smtpSecure"><option value="starttls">STARTTLS (Port 587)</option><option value="ssl">SSL/TLS (Port 465)</option><option value="none">None (Port 25)</option></select></div></div>
+                    <div class="form-row"><div class="form-group" style="flex:1"><label class="form-label" for="smtpAuthType">Auth Type</label><select class="form-input" id="smtpAuthType" onchange="toggleSmtpAuth()"><option value="login">Username & Password</option><option value="none">None (IP Authenticated)</option><option value="api-key">API Key</option><option value="oauth2">OAuth2</option></select></div><div class="form-group" style="flex:1"><label class="form-label" for="smtpSecure">Encryption</label><select class="form-input" id="smtpSecure"><option value="starttls">STARTTLS (Port 587)</option><option value="ssl">SSL/TLS (Port 465)</option><option value="none">None (Port 25)</option></select></div></div>
                 </div>
                 <div id="smtpAuthFields">
-                    <div class="form-row"><div class="form-group"><label class="form-label" id="smtpUsernameLabel">Username</label><input type="text" class="form-input" id="smtpUsername" placeholder="username"></div><div class="form-group"><label class="form-label" id="smtpPasswordLabel">Password</label><input type="password" class="form-input" id="smtpPassword" placeholder="••••••••"></div></div>
+                    <div class="form-row"><div class="form-group"><label class="form-label" id="smtpUsernameLabel" for="smtpUsername">Username</label><input type="text" class="form-input" id="smtpUsername" placeholder="username"></div><div class="form-group"><label class="form-label" id="smtpPasswordLabel" for="smtpPassword">Password</label><input type="password" class="form-input" id="smtpPassword" placeholder="••••••••"></div></div>
                 </div>
-                <div class="form-row"><div class="form-group"><label class="form-label">From Email</label><input type="email" class="form-input" id="smtpFromEmail" placeholder="noreply@example.com"></div><div class="form-group"><label class="form-label">From Name</label><input type="text" class="form-input" id="smtpFromName" placeholder="Your Company"></div></div>
+                <div class="form-row"><div class="form-group"><label class="form-label" for="smtpFromEmail">From Email</label><input type="email" class="form-input" id="smtpFromEmail" placeholder="noreply@example.com"></div><div class="form-group"><label class="form-label" for="smtpFromName">From Name</label><input type="text" class="form-input" id="smtpFromName" placeholder="Your Company"></div></div>
             </form>
         </div>
         <div class="modal-footer"><button class="btn btn-secondary" onclick="closeSmtpModal()">Cancel</button><button class="btn btn-info" onclick="testSmtp()">Test</button><button class="btn btn-primary" onclick="saveSmtp()">Save</button></div>
@@ -1611,21 +1611,21 @@ body.has-bg-image .item-card{
         <div class="modal-body">
             <form id="attachmentLibraryForm">
                 <input type="hidden" id="editAttachmentId">
-                <div class="form-row"><div class="form-group" style="flex:1"><label class="form-label">Name *</label><input type="text" class="form-input" id="attachmentName" placeholder="e.g., Welcome Template" required></div><div class="form-group" style="flex:1"><label class="form-label">Tags</label><input type="text" class="form-input" id="attachmentTags" placeholder="welcome, onboarding"></div></div>
-                <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="attachmentDescription" rows="2" placeholder="Optional description..."></textarea></div>
+                <div class="form-row"><div class="form-group" style="flex:1"><label class="form-label" for="attachmentName">Name *</label><input type="text" class="form-input" id="attachmentName" placeholder="e.g., Welcome Template" required></div><div class="form-group" style="flex:1"><label class="form-label" for="attachmentTags">Tags</label><input type="text" class="form-input" id="attachmentTags" placeholder="welcome, onboarding"></div></div>
+                <div class="form-group"><label class="form-label" for="attachmentDescription">Description</label><textarea class="form-input" id="attachmentDescription" rows="2" placeholder="Optional description..."></textarea></div>
                 <div class="form-group">
-                    <label class="form-label">Type</label>
+                    <label class="form-label" for="attachmentType">Type</label>
                     <select class="form-input" id="attachmentType" onchange="toggleAttachmentType()">
                         <option value="html">HTML Content</option>
                         <option value="file">Upload File</option>
                     </select>
                 </div>
                 <div id="attachmentHtmlGroup">
-                    <div class="form-group"><label class="form-label">HTML Content *</label><textarea class="form-input code-editor" id="attachmentHtmlContent" rows="10" placeholder="<html>Your HTML content...</html>"></textarea></div>
+                    <div class="form-group"><label class="form-label" for="attachmentHtmlContent">HTML Content *</label><textarea class="form-input code-editor" id="attachmentHtmlContent" rows="10" placeholder="<html>Your HTML content...</html>"></textarea></div>
                 </div>
                 <div id="attachmentFileGroup" style="display:none">
                     <div class="form-group">
-                        <label class="form-label">Upload File *</label>
+                        <label class="form-label" for="attachmentFileInput">Upload File *</label>
                         <input type="file" class="form-input" id="attachmentFileInput" onchange="handleLibraryFileChange(this)">
                         <p class="form-hint">Supports: DOCX, XLSX, PDF, JPG, PNG, SVG, HTML, and more (max 10MB)</p>
                     </div>
@@ -1669,11 +1669,11 @@ body.has-bg-image .item-card{
         <div class="modal-body">
             <input type="hidden" id="templateId">
             <div class="form-row">
-                <div class="form-group" style="flex:2"><label class="form-label">Name *</label><input type="text" class="form-input" id="templateName" placeholder="e.g., Welcome Email" required></div>
-                <div class="form-group" style="flex:1"><label class="form-label">Tags</label><input type="text" class="form-input" id="templateTags" placeholder="welcome, onboarding"></div>
+                <div class="form-group" style="flex:2"><label class="form-label" for="templateName">Name *</label><input type="text" class="form-input" id="templateName" placeholder="e.g., Welcome Email" required></div>
+                <div class="form-group" style="flex:1"><label class="form-label" for="templateTags">Tags</label><input type="text" class="form-input" id="templateTags" placeholder="welcome, onboarding"></div>
             </div>
-            <div class="form-group"><label class="form-label">Description</label><input type="text" class="form-input" id="templateDescription" placeholder="Optional short description"></div>
-            <div class="form-group"><label class="form-label">HTML Content *</label><textarea class="form-input code-editor" id="templateHtmlContent" rows="14" placeholder="<html><body>...</body></html>" required></textarea><p class="form-hint">Supports all the standard placeholders like {RECIPIENT_FIRST_NAME}, {LINK}, etc.</p></div>
+            <div class="form-group"><label class="form-label" for="templateDescription">Description</label><input type="text" class="form-input" id="templateDescription" placeholder="Optional short description"></div>
+            <div class="form-group"><label class="form-label" for="templateHtmlContent">HTML Content *</label><textarea class="form-input code-editor" id="templateHtmlContent" rows="14" placeholder="<html><body>...</body></html>" required></textarea><p class="form-hint">Supports all the standard placeholders like {RECIPIENT_FIRST_NAME}, {LINK}, etc.</p></div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeTemplateModal()">Cancel</button>
@@ -1695,7 +1695,7 @@ body.has-bg-image .item-card{
             <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="cleanRemoveUnsubscribes" checked> Unsubscribed addresses</label></div>
             <div class="form-group"><label class="form-label form-label-inline"><input type="checkbox" id="cleanRemoveFailed"> Repeatedly-failing addresses</label></div>
             <div class="form-group" id="cleanFailedThresholdGroup">
-                <label class="form-label">Failure threshold</label>
+                <label class="form-label" for="cleanFailedThreshold">Failure threshold</label>
                 <input type="number" class="form-input" id="cleanFailedThreshold" value="2" min="1" max="20">
                 <p class="form-hint">Remove addresses that have failed at least this many times in your email logs.</p>
             </div>
@@ -1714,7 +1714,7 @@ body.has-bg-image .item-card{
         <div class="modal-body">
             <p class="form-hint mb-md">Manually suppress an email address. Future campaigns will skip this recipient automatically.</p>
             <div class="form-group">
-                <label class="form-label">Email Address</label>
+                <label class="form-label" for="addUnsubscribeEmail">Email Address</label>
                 <input type="email" class="form-input" id="addUnsubscribeEmail" placeholder="user@example.com" autofocus>
             </div>
         </div>
@@ -1731,8 +1731,8 @@ body.has-bg-image .item-card{
         <div class="modal-body">
             <form id="recipientListForm">
                 <input type="hidden" id="recipientListId">
-                <div class="form-row"><div class="form-group" style="flex:2"><label class="form-label">List Name *</label><input type="text" class="form-input" id="recipientListName" placeholder="e.g., Newsletter Q1" required></div><div class="form-group" style="flex:1"><label class="form-label">Description</label><input type="text" class="form-input" id="recipientListDescription" placeholder="Optional"></div></div>
-                <div class="form-group"><label class="form-label">Recipients (one per line or CSV) *</label><textarea class="form-input code-editor" id="recipientListItems" rows="10" placeholder="email@example.com&#10;john@co.com,John Doe,Acme&#10;&#10;Or CSV with headers:&#10;email,name,company" required></textarea><p class="form-hint">Supports plain emails or CSV with custom columns for placeholders</p></div>
+                <div class="form-row"><div class="form-group" style="flex:2"><label class="form-label" for="recipientListName">List Name *</label><input type="text" class="form-input" id="recipientListName" placeholder="e.g., Newsletter Q1" required></div><div class="form-group" style="flex:1"><label class="form-label" for="recipientListDescription">Description</label><input type="text" class="form-input" id="recipientListDescription" placeholder="Optional"></div></div>
+                <div class="form-group"><label class="form-label" for="recipientListItems">Recipients (one per line or CSV) *</label><textarea class="form-input code-editor" id="recipientListItems" rows="10" placeholder="email@example.com&#10;john@co.com,John Doe,Acme&#10;&#10;Or CSV with headers:&#10;email,name,company" required></textarea><p class="form-hint">Supports plain emails or CSV with custom columns for placeholders</p></div>
                 <div class="section-box mt-sm" id="recipientListPreview"><strong>Preview:</strong> <span id="recipientListCount">0</span> recipients detected</div>
             </form>
         </div>
@@ -1747,8 +1747,8 @@ body.has-bg-image .item-card{
         <div class="modal-body">
             <form id="listForm">
                 <input type="hidden" id="listType"><input type="hidden" id="listId">
-                <div class="form-group"><label class="form-label">List Name *</label><input type="text" class="form-input" id="listName" placeholder="e.g., Welcome Subjects" required></div>
-                <div class="form-group"><label class="form-label" id="listItemsLabel">Items (one per line) *</label><textarea class="form-input" id="listItems" rows="10" placeholder="Item 1&#10;Item 2&#10;Item 3..." required></textarea><p class="form-hint">Enter each item on a new line</p></div>
+                <div class="form-group"><label class="form-label" for="listName">List Name *</label><input type="text" class="form-input" id="listName" placeholder="e.g., Welcome Subjects" required></div>
+                <div class="form-group"><label class="form-label" id="listItemsLabel" for="listItems">Items (one per line) *</label><textarea class="form-input" id="listItems" rows="10" placeholder="Item 1&#10;Item 2&#10;Item 3..." required></textarea><p class="form-hint">Enter each item on a new line</p></div>
             </form>
         </div>
         <div class="modal-footer"><button class="btn btn-secondary" onclick="closeListModal()">Cancel</button><button class="btn btn-primary" onclick="saveList()">Save</button></div>
@@ -1762,9 +1762,9 @@ body.has-bg-image .item-card{
         <div class="modal-body">
             <form id="proxyForm">
                 <input type="hidden" id="proxyId">
-                <div class="form-group"><label class="form-label">Name *</label><input type="text" class="form-input" id="proxyName" placeholder="e.g., US Proxy 1" required></div>
-                <div class="form-row"><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="proxyType"><option value="http">HTTP</option><option value="https">HTTPS</option><option value="socks5">SOCKS5</option></select></div><div class="form-group" style="flex:2"><label class="form-label">Host *</label><input type="text" class="form-input" id="proxyHost" placeholder="proxy.example.com" required></div><div class="form-group" style="flex:1"><label class="form-label">Port *</label><input type="number" class="form-input" id="proxyPort" placeholder="8080" required></div></div>
-                <div class="form-row"><div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="proxyUsername" placeholder="Optional"></div><div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="proxyPassword" placeholder="Optional"></div></div>
+                <div class="form-group"><label class="form-label" for="proxyName">Name *</label><input type="text" class="form-input" id="proxyName" placeholder="e.g., US Proxy 1" required></div>
+                <div class="form-row"><div class="form-group"><label class="form-label" for="proxyType">Type</label><select class="form-input" id="proxyType"><option value="http">HTTP</option><option value="https">HTTPS</option><option value="socks5">SOCKS5</option></select></div><div class="form-group" style="flex:2"><label class="form-label" for="proxyHost">Host *</label><input type="text" class="form-input" id="proxyHost" placeholder="proxy.example.com" required></div><div class="form-group" style="flex:1"><label class="form-label" for="proxyPort">Port *</label><input type="number" class="form-input" id="proxyPort" placeholder="8080" required></div></div>
+                <div class="form-row"><div class="form-group"><label class="form-label" for="proxyUsername">Username</label><input type="text" class="form-input" id="proxyUsername" placeholder="Optional"></div><div class="form-group"><label class="form-label" for="proxyPassword">Password</label><input type="password" class="form-input" id="proxyPassword" placeholder="Optional"></div></div>
             </form>
         </div>
         <div class="modal-footer"><button class="btn btn-secondary" onclick="closeProxyModal()">Cancel</button><button class="btn btn-primary" onclick="saveProxy()">Save</button></div>
