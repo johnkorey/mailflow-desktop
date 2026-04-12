@@ -655,7 +655,6 @@ export function validateAndDedupeRecipients(campaignId, recipients, opts = {}) {
         }
     }
 
-    const seenInBatch = new Set();
     for (const raw of recipients || []) {
         if (!raw || typeof raw !== 'object') continue;
         const email = (raw.email || '').trim().toLowerCase();
@@ -665,28 +664,21 @@ export function validateAndDedupeRecipients(campaignId, recipients, opts = {}) {
             invalid.push(email);
             continue;
         }
-        if (seenInBatch.has(email)) {
-            duplicates.push(email);
-            continue;
-        }
         if (existingSet.has(email)) {
             already_exists.push(email);
             continue;
         }
-        seenInBatch.add(email);
         valid.push({ email, name: raw.name || null });
     }
 
     return {
         valid,
         invalid,
-        duplicates,
         already_exists,
         summary: {
             total_input: (recipients || []).length,
             imported: valid.length,
             invalid: invalid.length,
-            duplicates: duplicates.length,
             already_exists: already_exists.length
         }
     };
