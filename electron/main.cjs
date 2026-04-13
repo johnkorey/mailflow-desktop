@@ -300,13 +300,25 @@ async function fetchPublicKey(kid) {
  * destructuring out `signature`, which preserves original key insertion order.
  */
 function verifyLicenseSignature(license, publicKeyPem) {
-    if (!license || !license.signature || !publicKeyPem) return false;
+    if (!license) { console.warn('[License Debug] verify: no license'); return false; }
+    if (!license.signature) { console.warn('[License Debug] verify: no signature field on license'); return false; }
+    if (!publicKeyPem) { console.warn('[License Debug] verify: no public key PEM'); return false; }
     const { signature, ...payload } = license;
     const json = JSON.stringify(payload);
+    console.log('[License Debug] verify: signing input sha256=' + crypto.createHash('sha256').update(json).digest('hex').substring(0, 16) + ', bytes=' + Buffer.byteLength(json));
     try {
-        return crypto.createVerify('RSA-SHA256').update(json).verify(publicKeyPem, signature, 'base64');
+        const ok = crypto.createVerify('RSA-SHA256').update(json).verify(publicKeyPem, signature, 'base64');
+        console.log('[License Debug] verify: RSA-SHA256 + base64 → ' + ok);
+        if (!ok) {
+            // Try alternate encodings in case the server used hex or a different algorithm
+            const hexOk = crypto.createVerify('RSA-SHA256').update(json).verify(publicKeyPem, signature, 'hex');
+            console.log('[License Debug] verify: RSA-SHA256 + hex → ' + hexOk);
+            const sha512Ok = crypto.createVerify('RSA-SHA512').update(json).verify(publicKeyPem, signature, 'base64');
+            console.log('[License Debug] verify: RSA-SHA512 + base64 → ' + sha512Ok);
+        }
+        return ok;
     } catch (e) {
-        console.warn('[License] signature verify threw:', e.message);
+        console.warn('[License Debug] verify: threw ' + e.message);
         return false;
     }
 }
@@ -373,10 +385,38 @@ async function activateLicense(licenseKey) {
 
         const license = res.data.license;
 
+        // ---------- [DIAGNOSTIC LOGGING — v2.0.14 only] ----------
+        // Temporary logs to figure out why signature verification fails.
+        // Remove in the next release after we've diagnosed.
+        try {
+            const licenseKeys = Object.keys(license);
+            const hasSignature = !!license.signature;
+            const sigType = typeof license.signature;
+            const sigLen = hasSignature ? String(license.signature).length : 0;
+            const sigPreview = hasSignature ? String(license.signature).substring(0, 24) + '…' : '(missing)';
+            const kid = license.kid || '(missing)';
+            console.log('[License Debug] activation response keys:', licenseKeys.join(', '));
+            console.log('[License Debug] kid:', kid);
+            console.log('[License Debug] signature type:', sigType, '| length:', sigLen, '| preview:', sigPreview);
+            // Reproduce what the client will try to verify
+            const { signature, ...payload } = license;
+            console.log('[License Debug] payload keys (order):', Object.keys(payload).join(', '));
+            console.log('[License Debug] payload JSON (first 300 chars):', JSON.stringify(payload).substring(0, 300));
+        } catch (e) {
+            console.warn('[License Debug] log block threw:', e.message);
+        }
+        // ---------- [END DIAGNOSTIC LOGGING] ----------
+
         // Fetch public key for this kid, then verify the signature. A license
         // that won't verify is treated as tampered-with.
         const pem = await ensurePublicKeyForLicense(license);
-        if (!pem || !verifyLicenseSignature(license, pem)) {
+        if (!pem) {
+            console.warn('[License Debug] public key fetch FAILED for kid:', license.kid);
+            return { success: false, error: 'License signature invalid — refusing to trust this response.' };
+        }
+        const verified = verifyLicenseSignature(license, pem);
+        console.log('[License Debug] signature verify result:', verified);
+        if (!verified) {
             return { success: false, error: 'License signature invalid — refusing to trust this response.' };
         }
 
