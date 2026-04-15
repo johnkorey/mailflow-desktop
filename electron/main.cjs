@@ -243,6 +243,56 @@ function writePublicKey(kid, pem) {
 }
 
 /**
+ * Delete the on-disk public key cache for a kid. Called when signature
+ * verification fails against the cached key — the server may have rotated
+ * its keypair under the same kid (production incident 2026-04-15). On
+ * next verification attempt we'll refetch a fresh key from the server.
+ */
+function clearCachedPublicKey(kid) {
+    if (!isSafeKid(kid)) return;
+    try {
+        const p = publicKeyPath(kid);
+        if (fs.existsSync(p)) {
+            fs.unlinkSync(p);
+            console.log('[License] Cleared cached public key for kid:', kid);
+        }
+    } catch (e) {
+        console.warn('[License] Could not clear cached public key:', e.message);
+    }
+}
+
+/**
+ * One-time boot migration for v2.0.17. Installs from v2.0.0–v2.0.16 may
+ * hold a cached server-key-<kid>.pem that was rotated under the same kid
+ * during a server redeploy (prod incident 2026-04-15, before keys/ went
+ * onto the persistent volume). Wipe all cached pubkeys exactly once so
+ * the next activation refetches the current production key.
+ *
+ * The marker file ensures this only runs once per install, even though
+ * future upgrades will re-trigger boot. Subsequent rotations are handled
+ * automatically by verifyLicenseSignatureWithRetry().
+ */
+function runPubkeyCacheMigrationV2017() {
+    const flagFile = userDataPath('pubkey-cache-migration-v2017.flag');
+    if (fs.existsSync(flagFile)) return;
+    try {
+        const userData = userDataPath();
+        let cleared = 0;
+        for (const f of fs.readdirSync(userData)) {
+            if (f.startsWith('server-key-') && f.endsWith('.pem')) {
+                try { fs.unlinkSync(path.join(userData, f)); cleared++; } catch {}
+            }
+        }
+        fs.writeFileSync(flagFile, new Date().toISOString());
+        if (cleared > 0) {
+            console.log(`[License] v2.0.17 migration: cleared ${cleared} stale cached public key(s). Next license check will refetch from the server.`);
+        }
+    } catch (e) {
+        console.warn('[License] v2.0.17 pubkey cache migration failed:', e.message);
+    }
+}
+
+/**
  * Minimal HTTPS client for license-server endpoints. Returns
  * `{ status, data }` with `data` parsed as JSON when possible.
  */
@@ -327,25 +377,12 @@ function canonicalStringify(value) {
  * The defense-in-depth property is preserved: only the serialization /
  * padding choice is flexible, not the cryptographic security.
  */
-// ⚠️ TEMPORARY BYPASS — v2.0.16
-// The licence server's signing scheme is currently mismatched with the client's
-// verification (24 reasonable variants all fail). Until the server side is
-// fixed, treat any license blob with a non-empty signature field as accepted.
-// HTTPS + the server's /api/validate response still authenticate the response.
-// REVERT THIS in v2.0.17 once the server fix lands and re-enable strict verify.
-const SIG_VERIFICATION_BYPASS = true;
-
 function verifyLicenseSignature(license, publicKeyPem) {
     if (!license || !license.signature || !publicKeyPem) {
         if (!license) console.warn('[License] verify: no license');
         else if (!license.signature) console.warn('[License] verify: no signature field');
         else console.warn('[License] verify: no public key PEM');
         return false;
-    }
-
-    if (SIG_VERIFICATION_BYPASS) {
-        console.warn('[License] ⚠️ SIGNATURE VERIFICATION BYPASSED (v2.0.16 temporary). License accepted on HTTPS+server-validity grounds only. Revert once licence server signing is fixed.');
-        return true;
     }
 
     const { signature, ...payload } = license;
@@ -421,6 +458,39 @@ async function ensurePublicKeyForLicense(license) {
     }
 }
 
+/**
+ * Verify the license signature, retrying once with a fresh public key
+ * if the first attempt fails. Self-heals server-side keypair rotations
+ * (any future incident like 2026-04-15 won't break installed clients).
+ *
+ * Returns true on verified, false on rejected.
+ */
+async function verifyLicenseSignatureWithRetry(license) {
+    if (!license || !license.kid) return false;
+
+    // First attempt: cached key (or fetched fresh if no cache exists)
+    const cachedPem = await ensurePublicKeyForLicense(license);
+    if (cachedPem && verifyLicenseSignature(license, cachedPem)) {
+        return true;
+    }
+
+    // Verification failed — could be a stale cached key from before a
+    // server-side rotation. Wipe the cache and refetch from /api/public-key.
+    console.warn('[License] First verify attempt failed — refreshing public key cache for kid:', license.kid);
+    clearCachedPublicKey(license.kid);
+    try {
+        const fresh = await fetchPublicKey(license.kid);
+        if (verifyLicenseSignature(license, fresh.pem)) {
+            console.log('[License] Signature verified after refreshing public key cache (server keypair likely rotated)');
+            return true;
+        }
+    } catch (e) {
+        console.warn('[License] Public key refresh failed:', e.message);
+    }
+
+    return false;
+}
+
 function licenseExpiryMs(license) {
     if (!license || !license.expiry) return null;
     const t = new Date(license.expiry).getTime();
@@ -466,14 +536,9 @@ async function activateLicense(licenseKey) {
 
         const license = res.data.license;
 
-        // Fetch public key for this kid, then verify the signature across all
-        // plausible serialization + padding + hash combinations.
-        const pem = await ensurePublicKeyForLicense(license);
-        if (!pem) {
-            console.warn('[License] public key fetch failed for kid:', license.kid);
-            return { success: false, error: 'License signature invalid — refusing to trust this response.' };
-        }
-        if (!verifyLicenseSignature(license, pem)) {
+        // Verify the signature; retry with a fresh public key on failure
+        // so a server-side keypair rotation auto-heals on the client.
+        if (!(await verifyLicenseSignatureWithRetry(license))) {
             return { success: false, error: 'License signature invalid — refusing to trust this response.' };
         }
 
@@ -523,10 +588,11 @@ async function doValidateLicense() {
     // fast-path purposes, otherwise every boot would force a server round-trip.
     const expiresFarEnoughAway = expiryMs == null || (expiryMs - now) > LICENSE_CACHE_TTL_MS;
 
-    // --- Fast path: trust the cache if it's fresh and signature still verifies
+    // --- Fast path: trust the cache if it's fresh and signature still verifies.
+    // Use the retry-with-fresh-key helper so a server keypair rotation since
+    // we last cached the license auto-heals on the next launch.
     if (!hasExpired && expiresFarEnoughAway && isWithinCacheTtl(cached)) {
-        const pem = await ensurePublicKeyForLicense(license);
-        if (pem && verifyLicenseSignature(license, pem)) {
+        if (await verifyLicenseSignatureWithRetry(license)) {
             console.log('[License] cache-hit validation (signature OK, fresh)');
             return { valid: true, license, source: 'cache' };
         }
@@ -553,8 +619,7 @@ async function doValidateLicense() {
         }
 
         const fresh = res.data.license || license;
-        const pem = await ensurePublicKeyForLicense(fresh);
-        if (!pem || !verifyLicenseSignature(fresh, pem)) {
+        if (!(await verifyLicenseSignatureWithRetry(fresh))) {
             console.warn('[License] Server response signature invalid — refusing');
             clearLicenseCache();
             return { valid: false, reason: 'Signature invalid' };
@@ -781,6 +846,10 @@ app.on('ready', async () => {
     // license validation, server boot, and auto-updater events all land
     // in main.log / error.log.
     setupLogging();
+
+    // One-time migration: wipe stale cached pubkeys from pre-2.0.17 installs
+    // (prod keypair rotation 2026-04-15 left clients with mismatched caches).
+    runPubkeyCacheMigrationV2017();
 
     // IPC handlers for window controls
     ipcMain.handle('window-minimize', () => {
