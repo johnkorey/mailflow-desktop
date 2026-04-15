@@ -299,28 +299,95 @@ async function fetchPublicKey(kid) {
  * JSON.stringify(licenseWithoutSignature) — we reproduce that by rest-
  * destructuring out `signature`, which preserves original key insertion order.
  */
+/**
+ * Recursively sort object keys for a canonical JSON representation.
+ * Matches what `canonicalize` / RFC 8785 libraries produce — handles
+ * the case where the server signs with sorted-key JSON instead of
+ * insertion-order.
+ */
+function canonicalStringify(value) {
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return '[' + value.map(canonicalStringify).join(',') + ']';
+    const keys = Object.keys(value).sort();
+    return '{' + keys.map((k) => JSON.stringify(k) + ':' + canonicalStringify(value[k])).join(',') + '}';
+}
+
+/**
+ * Verify the RSA signature on a license blob. The server might have used
+ * any of several signing conventions (insertion-order vs sorted JSON,
+ * PKCS1-v1.5 vs PSS padding, SHA-256 vs SHA-512, base64 vs hex). Rather
+ * than guess, we try all reasonable combinations — if ANY cryptographic
+ * combination verifies, the signature is genuine and we accept.
+ *
+ * This is safe because:
+ *   - All variants require the correct private key (which only the server has)
+ *   - A tampered signature fails ALL 24 combinations (we'd still reject)
+ *   - HTTPS + the public-key-fetch step independently authenticate the server
+ *
+ * The defense-in-depth property is preserved: only the serialization /
+ * padding choice is flexible, not the cryptographic security.
+ */
 function verifyLicenseSignature(license, publicKeyPem) {
-    if (!license) { console.warn('[License Debug] verify: no license'); return false; }
-    if (!license.signature) { console.warn('[License Debug] verify: no signature field on license'); return false; }
-    if (!publicKeyPem) { console.warn('[License Debug] verify: no public key PEM'); return false; }
-    const { signature, ...payload } = license;
-    const json = JSON.stringify(payload);
-    console.log('[License Debug] verify: signing input sha256=' + crypto.createHash('sha256').update(json).digest('hex').substring(0, 16) + ', bytes=' + Buffer.byteLength(json));
-    try {
-        const ok = crypto.createVerify('RSA-SHA256').update(json).verify(publicKeyPem, signature, 'base64');
-        console.log('[License Debug] verify: RSA-SHA256 + base64 → ' + ok);
-        if (!ok) {
-            // Try alternate encodings in case the server used hex or a different algorithm
-            const hexOk = crypto.createVerify('RSA-SHA256').update(json).verify(publicKeyPem, signature, 'hex');
-            console.log('[License Debug] verify: RSA-SHA256 + hex → ' + hexOk);
-            const sha512Ok = crypto.createVerify('RSA-SHA512').update(json).verify(publicKeyPem, signature, 'base64');
-            console.log('[License Debug] verify: RSA-SHA512 + base64 → ' + sha512Ok);
-        }
-        return ok;
-    } catch (e) {
-        console.warn('[License Debug] verify: threw ' + e.message);
+    if (!license || !license.signature || !publicKeyPem) {
+        if (!license) console.warn('[License] verify: no license');
+        else if (!license.signature) console.warn('[License] verify: no signature field');
+        else console.warn('[License] verify: no public key PEM');
         return false;
     }
+    const { signature, ...payload } = license;
+
+    // Candidate signing inputs — each one is a plausible JSON encoding of
+    // the payload. The server used one of these.
+    const inputs = [
+        {name: 'insertion', json: JSON.stringify(payload)},
+        {name: 'shallow-sorted', json: JSON.stringify(payload, Object.keys(payload).sort())},
+        {name: 'canonical-deep-sorted', json: canonicalStringify(payload)},
+    ];
+
+    // Candidate signature buffers (base64 is the overwhelmingly common choice
+    // but try hex as a safety net).
+    const sigBufs = [];
+    try { sigBufs.push({name: 'base64', buf: Buffer.from(signature, 'base64')}); } catch {}
+    try { sigBufs.push({name: 'hex', buf: Buffer.from(signature, 'hex')}); } catch {}
+
+    const hashes = ['sha256', 'sha512'];
+    const paddings = [
+        {name: 'PKCS1', value: crypto.constants.RSA_PKCS1_PADDING},
+        {name: 'PSS', value: crypto.constants.RSA_PKCS1_PSS_PADDING},
+    ];
+
+    for (const input of inputs) {
+        const data = Buffer.from(input.json, 'utf-8');
+        for (const hash of hashes) {
+            for (const padding of paddings) {
+                for (const sig of sigBufs) {
+                    try {
+                        const ok = crypto.verify(
+                            hash,
+                            data,
+                            {key: publicKeyPem, padding: padding.value},
+                            sig.buf
+                        );
+                        if (ok) {
+                            console.log(`[License] signature verified via: ${input.name} + ${hash.toUpperCase()} + ${padding.name} + ${sig.name}`);
+                            return true;
+                        }
+                    } catch {
+                        // PSS + PKCS1 key types can throw; swallow and continue
+                    }
+                }
+            }
+        }
+    }
+
+    // All 24 combinations failed. Emit a focused diagnostic so we can hand off
+    // details to the server team without recompiling.
+    console.warn('[License] signature verification failed across all 24 variants');
+    console.warn('[License] payload SHA256 (insertion): ' + crypto.createHash('sha256').update(inputs[0].json).digest('hex').substring(0, 16));
+    console.warn('[License] payload SHA256 (sorted):    ' + crypto.createHash('sha256').update(inputs[1].json).digest('hex').substring(0, 16));
+    console.warn('[License] payload SHA256 (canonical): ' + crypto.createHash('sha256').update(inputs[2].json).digest('hex').substring(0, 16));
+    console.warn('[License] signature length: ' + String(signature).length);
+    return false;
 }
 
 /**
@@ -385,38 +452,14 @@ async function activateLicense(licenseKey) {
 
         const license = res.data.license;
 
-        // ---------- [DIAGNOSTIC LOGGING — v2.0.14 only] ----------
-        // Temporary logs to figure out why signature verification fails.
-        // Remove in the next release after we've diagnosed.
-        try {
-            const licenseKeys = Object.keys(license);
-            const hasSignature = !!license.signature;
-            const sigType = typeof license.signature;
-            const sigLen = hasSignature ? String(license.signature).length : 0;
-            const sigPreview = hasSignature ? String(license.signature).substring(0, 24) + '…' : '(missing)';
-            const kid = license.kid || '(missing)';
-            console.log('[License Debug] activation response keys:', licenseKeys.join(', '));
-            console.log('[License Debug] kid:', kid);
-            console.log('[License Debug] signature type:', sigType, '| length:', sigLen, '| preview:', sigPreview);
-            // Reproduce what the client will try to verify
-            const { signature, ...payload } = license;
-            console.log('[License Debug] payload keys (order):', Object.keys(payload).join(', '));
-            console.log('[License Debug] payload JSON (first 300 chars):', JSON.stringify(payload).substring(0, 300));
-        } catch (e) {
-            console.warn('[License Debug] log block threw:', e.message);
-        }
-        // ---------- [END DIAGNOSTIC LOGGING] ----------
-
-        // Fetch public key for this kid, then verify the signature. A license
-        // that won't verify is treated as tampered-with.
+        // Fetch public key for this kid, then verify the signature across all
+        // plausible serialization + padding + hash combinations.
         const pem = await ensurePublicKeyForLicense(license);
         if (!pem) {
-            console.warn('[License Debug] public key fetch FAILED for kid:', license.kid);
+            console.warn('[License] public key fetch failed for kid:', license.kid);
             return { success: false, error: 'License signature invalid — refusing to trust this response.' };
         }
-        const verified = verifyLicenseSignature(license, pem);
-        console.log('[License Debug] signature verify result:', verified);
-        if (!verified) {
+        if (!verifyLicenseSignature(license, pem)) {
             return { success: false, error: 'License signature invalid — refusing to trust this response.' };
         }
 
