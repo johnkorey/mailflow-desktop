@@ -1069,8 +1069,28 @@ export class EmailSender extends EventEmitter {
         // Message-ID domain alignment: the domain in Message-ID should
         // match the From domain so DKIM/SPF alignment passes. Nodemailer's
         // default uses the local hostname which usually doesn't match.
+        // Kept ON in both personal and bulk modes — only helps.
         const fromDomain = fromEmail.split('@')[1] || 'localhost';
         const messageId = `<${crypto.randomUUID()}@${fromDomain}>`;
+
+        // Personal mode (default) makes emails look indistinguishable from
+        // hand-sent Outlook messages. Bulk mode adds CAN-SPAM / GDPR headers
+        // required for legal compliance on commercial bulk campaigns.
+        const isBulk = campaign.bulk_mode === 1 || campaign.bulk_mode === true;
+
+        const headers = {};
+        if (isBulk) {
+            // RFC 8058 one-click unsubscribe — required by Gmail / Yahoo for
+            // any sender doing 5000+/day. Strong bulk signal to ESPs →
+            // Primary-tab loss for smaller senders, which is why we only
+            // emit these in bulk mode.
+            headers['List-Unsubscribe'] = `<${unsubscribeUrl}>`;
+            headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+        } else {
+            // Personal mode: impersonate a standard Outlook desktop client so
+            // Gmail classifiers don't flag the email as marketing bulk.
+            headers['X-Mailer'] = 'Microsoft Outlook 16.0';
+        }
 
         const mailOptions = {
             from: fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
@@ -1079,22 +1099,17 @@ export class EmailSender extends EventEmitter {
             messageId,
             html: htmlBody || undefined,
             text: effectiveText,
-            // CAN-SPAM / RFC 8058: List-Unsubscribe + one-click POST support
-            // Gmail/Outlook show a native unsubscribe button when these are present
-            headers: {
-                'List-Unsubscribe': `<${unsubscribeUrl}>`,
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
-            }
+            headers,
         };
 
-        // Per-email uniquification: inject an invisible HTML comment with a
-        // unique ID so each recipient gets a body with a distinct hash. Without
-        // this, ESPs compute a fingerprint of the body and when 10,000 identical
-        // bodies arrive within minutes they flag the entire batch as bulk.
-        // The comment is invisible to the recipient — no email client renders
-        // HTML comments. Every major ESP does something equivalent (tracking
-        // pixels with unique IDs, unique wrapper divs, etc.).
-        if (mailOptions.html && typeof mailOptions.html === 'string') {
+        // Per-email uniquification: invisible HTML comment with a unique ID
+        // so each recipient gets a body with a distinct hash. Without it,
+        // ESPs fingerprint identical bodies across a batch and flag bulk.
+        // Only added in bulk mode — personal mode is inherently unique per
+        // recipient via placeholders, and the comment itself is a subtle
+        // bulk signal to content classifiers that cross-reference many
+        // messages from the same sender.
+        if (isBulk && mailOptions.html && typeof mailOptions.html === 'string') {
             const uid = crypto.randomUUID().replace(/-/g, '');
             mailOptions.html += `<!-- mf:${uid} -->`;
         }

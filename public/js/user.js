@@ -1326,6 +1326,7 @@ async function saveCampaign() {
     const recipientsText = document.getElementById('campaignRecipients').value;
     const reply_to = document.getElementById('campaignReplyTo').value || null;
     const encoding = document.getElementById('campaignEncoding').value || null;
+    const bulk_mode = document.getElementById('campaignBulkMode').checked;
     const dedupeRecipients = document.getElementById('campaignDedupeRecipients').checked;
 
     // Set body based on content type
@@ -1385,6 +1386,7 @@ async function saveCampaign() {
             name, subject, body_html, body_text, smtp_config_id, reply_to,
             attachment, attachment_id, attachment_format, attachment_custom_name,
             encoding,
+            bulk_mode,
             ...rotationData
         };
 
@@ -1521,6 +1523,10 @@ async function editCampaign(id) {
         // Restore encoding setting
         const encodingSelect = document.getElementById('campaignEncoding');
         if (encodingSelect) encodingSelect.value = c.encoding || '';
+
+        // Restore bulk_mode (defaults to off — personal mode)
+        const bulkModeCheckbox = document.getElementById('campaignBulkMode');
+        if (bulkModeCheckbox) bulkModeCheckbox.checked = c.bulk_mode === 1 || c.bulk_mode === true;
 
         // Show existing recipients
         document.getElementById('campaignRecipients').value =

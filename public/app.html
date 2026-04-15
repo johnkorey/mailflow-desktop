@@ -1544,6 +1544,10 @@ body.has-bg-image .item-card{
                             </select>
                             <p class="form-hint">Controls how subject, sender name, and body are encoded. Base64 avoids charset issues; charset encodings (ISO, Windows, etc.) match specific regional conventions. Leave "Off" for standard UTF-8.</p>
                         </div>
+                        <div class="form-group" style="margin-top:8px;margin-bottom:4px">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text-2)"><input type="checkbox" id="campaignBulkMode"> Bulk campaign mode (adds CAN-SPAM unsubscribe headers)</label>
+                            <p class="form-hint">Default is personal mode — emails look indistinguishable from hand-sent Outlook messages and land in Primary / Focused inbox. Enable this for commercial bulk campaigns (50+ recipients) where CAN-SPAM / GDPR compliance is legally required.</p>
+                        </div>
                         <details style="margin-top:10px">
                             <summary style="cursor:pointer;font-weight:600;color:var(--text-3);font-size:12px">Advanced: Content Rotation</summary>
                             <div class="section-box mt-sm" style="margin-bottom:0">

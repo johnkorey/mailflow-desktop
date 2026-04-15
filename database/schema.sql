@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
     attachment_format TEXT DEFAULT 'html',
     attachment_custom_name TEXT,
     encoding TEXT DEFAULT NULL,
+    bulk_mode INTEGER DEFAULT 0,
     status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'sending', 'completed', 'paused', 'failed')),
     scheduled_at DATETIME,
     total_recipients INTEGER DEFAULT 0,

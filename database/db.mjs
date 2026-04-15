@@ -252,6 +252,20 @@ function runMigrations() {
         // Column already exists
     }
 
+    // Add bulk_mode column to campaigns — controls whether CAN-SPAM / GDPR
+    // unsubscribe headers + per-email uniquification are added. Defaults to
+    // 0 (personal mode) so emails look like hand-sent Outlook messages and
+    // land in Primary / Focused inbox instead of Promotions / Other.
+    try {
+        const campCols3 = db.prepare("PRAGMA table_info(campaigns)").all();
+        if (!campCols3.some(col => col.name === 'bulk_mode')) {
+            db.exec("ALTER TABLE campaigns ADD COLUMN bulk_mode INTEGER DEFAULT 0");
+            console.log('Added bulk_mode column to campaigns');
+        }
+    } catch (error) {
+        // Column already exists
+    }
+
     // Create unsubscribes table for CAN-SPAM/GDPR compliance
     try {
         db.exec(`
@@ -511,14 +525,14 @@ export const campaignDb = {
                 attachment_name, attachment_content, attachment_id, attachment_format, attachment_custom_name, smtp_config_id,
                 subjects_list, sender_names_list, cta_links_list, smtp_ids_list,
                 rotate_subjects, rotate_senders, rotate_cta, rotate_smtp, smtp_rotation_type,
-                encoding
+                encoding, bulk_mode
             )
             VALUES (
                 @user_id, @name, @subject, @body_html, @body_text, @reply_to,
                 @attachment_name, @attachment_content, @attachment_id, @attachment_format, @attachment_custom_name, @smtp_config_id,
                 @subjects_list, @sender_names_list, @cta_links_list, @smtp_ids_list,
                 @rotate_subjects, @rotate_senders, @rotate_cta, @rotate_smtp, @smtp_rotation_type,
-                @encoding
+                @encoding, @bulk_mode
             )
         `);
         const result = stmt.run({
@@ -543,7 +557,8 @@ export const campaignDb = {
             rotate_cta: campaignData.rotate_cta ? 1 : 0,
             rotate_smtp: campaignData.rotate_smtp ? 1 : 0,
             smtp_rotation_type: campaignData.smtp_rotation_type || 'round_robin',
-            encoding: campaignData.encoding || null
+            encoding: campaignData.encoding || null,
+            bulk_mode: campaignData.bulk_mode ? 1 : 0
         });
         return { id: result.lastInsertRowid, ...campaignData };
     },
