@@ -1,6 +1,6 @@
 {
   "name": "mailflow-desktop",
-  "version": "2.0.14",
+  "version": "2.0.15",
   "description": "MailFlow - Email Sender Desktop Application",
   "type": "module",
   "main": "electron/main.cjs",
