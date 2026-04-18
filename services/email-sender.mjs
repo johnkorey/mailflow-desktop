@@ -1056,9 +1056,12 @@ export class EmailSender extends EventEmitter {
         let subject = this.replacePlaceholders(subjectSource, placeholders);
         let htmlBody = this.replacePlaceholders(bodyBefore, htmlPlaceholders);
         let textBody = this.replacePlaceholders(campaign.body_text || '', textPlaceholders);
-        
-        // Build mail options - use rotated sender name or SMTP config name
-        const fromName = rotatedSenderName || smtpConfig.from_name || '';
+
+        // Build mail options — use rotated sender name or SMTP config name.
+        // Both are placeholder-expanded so entries like "Team at {FAKE_COMPANY}"
+        // or "{RECIPIENT_FIRST_NAME}'s Contact" render per-recipient.
+        const rawFromName = rotatedSenderName || smtpConfig.from_name || '';
+        const fromName = rawFromName ? this.replacePlaceholders(rawFromName, placeholders) : '';
         const fromEmail = smtpConfig.from_email || smtpConfig.username || 'noreply@localhost';
 
         // Auto-generate text/plain from HTML if the user didn't write one.
